@@ -1,0 +1,10 @@
+# Secret files
+*.env
+config.yaml
+
+# Compiled files
+*.so
+*.exe
+
+# Misc
+/*.cpp
