@@ -1,0 +1,9 @@
+# Change the filename to config.yaml
+coinbasepro:
+  live:
+    apiKey: "apikeyhere"
+    secretKey: "secretkeyhere"
+
+  sandbox:
+    apiKey: "apikeyhere"
+    secretKey: "secretkeyhere"

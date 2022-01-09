@@ -3,7 +3,7 @@
 config.yaml
 
 # Compiled files
-*.so
+*.o
 *.exe
 
 # Misc
