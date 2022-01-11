@@ -18,7 +18,7 @@
 #include <string>
 #include <utility>
 
-namespace Adapters::CoinbasePro::REST
+namespace CryptoConnect::CoinbasePro::REST
 {
     Connector::Connector(Auth *auth) : auth_(auth)
     {
@@ -133,6 +133,12 @@ namespace Adapters::CoinbasePro::REST
 
         rapidjson::Document document;
         document.Parse(response.c_str());
+
+        if (!document.IsArray())
+        {
+            std::cerr << "No bars received for " << productId << " | " << response << '\n';
+            return;
+        }
 
         for (auto const &barJson : document.GetArray())
             output.emplace_back(
@@ -304,7 +310,6 @@ namespace Adapters::CoinbasePro::REST
             {
                 orderResponseCode = Orders::OrderResponse::Code::UNFORESEEN_FAILURE;
                 std::cerr << "Unforeseen order failure with message: " << message << "~" << '\n';
-                std::cout << "Bool value: " << (message == "Insufficient funds") << '\n';
             }
             output = Orders::OrderResponse("", orderResponseCode);
             return;
@@ -352,6 +357,9 @@ namespace Adapters::CoinbasePro::REST
         std::string target = "/orders";
         switch (status)
         {
+        case Orders::Status::RECEIVED:
+            target += "?status=received";
+            break;
         case Orders::Status::OPEN:
             target += "?status=open";
             break;
@@ -401,6 +409,9 @@ namespace Adapters::CoinbasePro::REST
         std::string target = "/orders?productId=" + productId;
         switch (status)
         {
+        case Orders::Status::RECEIVED:
+            target += "&status=received";
+            break;
         case Orders::Status::OPEN:
             target += "&status=open";
             break;

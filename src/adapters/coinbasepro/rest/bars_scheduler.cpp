@@ -14,7 +14,7 @@
 #include <chrono>
 #include <thread>
 
-namespace Adapters::CoinbasePro::REST
+namespace CryptoConnect::CoinbasePro::REST
 {
     /**
      * We will query bars at the 5th second of every minute

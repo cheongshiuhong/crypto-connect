@@ -12,7 +12,7 @@
 #include <iomanip>
 #include <sstream>
 
-namespace Adapters::CoinbasePro
+namespace CryptoConnect::CoinbasePro
 {
     Auth::Auth()
     {

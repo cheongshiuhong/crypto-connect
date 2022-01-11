@@ -1,0 +1,1 @@
+#include "./coinbasepro/adapter.hpp"

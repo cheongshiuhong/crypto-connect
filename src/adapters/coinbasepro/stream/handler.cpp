@@ -2,31 +2,27 @@
 
 #include "helpers/utils/datetime.hpp"
 #include "structs/events.hpp"
-#include "adapters/coinbasepro/adapter.hpp"
 
-#include <simdjson/simdjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
 
-namespace Adapters::CoinbasePro::Stream
+namespace CryptoConnect::CoinbasePro::Stream
 {
     void Handler::onMessage(std::string const &message)
     {
-        // Cast to padded string
-        simdjson::padded_string paddedMessage = message;
+        rapidjson::Document document;
+        document.Parse(message.c_str());
 
-        // Parse the message with ondemand iterator
-        // Documents ARE iterators (ondemand)
-        simdjson::ondemand::parser parser;
-        document_t document = parser.iterate(paddedMessage);
-
-        auto typeView = document["type"].get_string().value();
+        auto typeView = std::string(document["type"].GetString());
 
         if (typeView == "subscriptions")
-            std::cout << "subscription event" << document << '\n';
+            std::cout << "subscription event: " << message << '\n';
         else if (typeView == "snapshot")
             this->handleSnapshot(document);
         else if (typeView == "l2update") // Tick
@@ -34,7 +30,7 @@ namespace Adapters::CoinbasePro::Stream
         else if (typeView == "ticker")
             this->handleTrade(document); // Trade
         else if (typeView == "received")
-            this->handleOrderReceipt(document); // Track the orderId
+            this->handleOrderReceipt(document); // Order Status (received)
         else if (typeView == "open")
             this->handleOrderOpen(document); // Order Status (open)
         else if (typeView == "done")
@@ -42,9 +38,9 @@ namespace Adapters::CoinbasePro::Stream
         else if (typeView == "match")
             this->handleOrderMatch(document); // Transaction
         else if (typeView == "error")
-            std::cerr << "Error encountered: " << document << '\n';
+            std::cerr << "Error encountered: " << message << '\n';
         else
-            std::cout << "Unrecognized event: " << document << '\n';
+            std::cout << "Unrecognized event: " << message << '\n';
     }
 
     void Handler::handleSnapshot(document_t &document)
@@ -65,15 +61,15 @@ namespace Adapters::CoinbasePro::Stream
         try
         {
             // Read the product ID
-            auto productId = std::string(document["product_id"].get_string().value());
+            auto productId = std::string(document["product_id"].GetString());
 
             // Extract ONLY the best asks and bids
             // NOTE: 'asks' MUST go before 'bids' and 'price' MUST go before 'volume'
             //        since we are using [ondemand] and have to adhere to the order of the JSON response string
-            auto bestAskPrice = document["asks"].get_array().at(0).get_array().at(0).get_double_in_string().value();
-            auto bestAskVolume = document["asks"].get_array().at(0).get_array().at(1).get_double_in_string().value();
-            auto bestBidPrice = document["bids"].get_array().at(0).get_array().at(0).get_double_in_string().value();
-            auto bestBidVolume = document["bids"].get_array().at(0).get_array().at(1).get_double_in_string().value();
+            auto bestAskPrice = std::stod(document["asks"].GetArray()[0].GetArray()[0].GetString());
+            auto bestAskVolume = std::stod(document["asks"].GetArray()[0].GetArray()[1].GetString());
+            auto bestBidPrice = std::stod(document["bids"].GetArray()[0].GetArray()[0].GetString());
+            auto bestBidVolume = std::stod(document["bids"].GetArray()[0].GetArray()[1].GetString());
 
             // Update the best tick detail for the given product
             this->tickTracker_[productId] = Events::Tick(
@@ -101,7 +97,7 @@ namespace Adapters::CoinbasePro::Stream
         try
         {
             // Read the product ID
-            auto productId = std::string(document["product_id"].get_string().value());
+            auto productId = std::string(document["product_id"].GetString());
 
             // Guard-clause against updates where we do not have the snapshot taken
             if (this->tickTracker_.find(productId) == this->tickTracker_.end())
@@ -110,9 +106,9 @@ namespace Adapters::CoinbasePro::Stream
             // NOTE: Changes Array follows: [[SIDE (buy/sell), Updated Best Bid/Ask, Updated best Bid/Ask volume]]
             //       The volume represents the residual volume and not the change in volume
             //       Docs at: https://docs.cloud.coinbase.com/exchange/docs/channels#the-level2-channel
-            auto side = document["changes"].get_array().at(0).get_array().at(0).get_string().value();
-            auto updatedPrice = document["changes"].get_array().at(0).get_array().at(1).get_double_in_string().value();
-            auto updatedVolume = document["changes"].get_array().at(0).get_array().at(2).get_double_in_string().value();
+            auto side = std::string(document["changes"].GetArray()[0].GetArray()[0].GetString());
+            auto updatedPrice = std::stod(document["changes"].GetArray()[0].GetArray()[1].GetString());
+            auto updatedVolume = std::stod(document["changes"].GetArray()[0].GetArray()[2].GetString());
 
             // Guard-clause against 0-volume updates
             // (Only useful if we are tracking the order book)
@@ -125,7 +121,7 @@ namespace Adapters::CoinbasePro::Stream
 
             // Read the timestamp and updating the tracker
             currentTick.epochTime_ = Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                std::string(document["time"].get_string().value()));
+                std::string(document["time"].GetString()));
 
             if (side == "buy")
             {
@@ -172,15 +168,13 @@ namespace Adapters::CoinbasePro::Stream
          */
         try
         {
-            Events::Trade trade(
-                Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                    std::string(document["time"].get_string().value())),
-                std::string(document["product_id"].get_string().value()),
-                document["price"].get_double_in_string(),
-                document["last_size"].get_double_in_string(), true);
-
             // Enqueue the event
-            this->eventQueue_->enqueue<Events::Trade>(trade);
+            this->eventQueue_->enqueue<Events::Trade>(
+                Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
+                    document["time"].GetString()),
+                document["product_id"].GetString(),
+                std::stod(document["price"].GetString()),
+                std::stod(document["last_size"].GetString()), true);
         }
         catch (std::exception const &e)
         {
@@ -211,17 +205,17 @@ namespace Adapters::CoinbasePro::Stream
          * }
          */
         // Track the order id
-        auto orderId = document["order_id"].get_string().value();
+        auto orderId = document["order_id"].GetString();
         this->myOrderIds_.emplace(std::string(orderId));
 
         // Enqueue the event
         this->eventQueue_->enqueue<Events::OrderStatus>(
-            std::string(document["order_id"].get_string().value()),
+            document["order_id"].GetString(),
             Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                std::string(document["time"].get_string().value())),
-            std::string(document["product_id"].get_string().value()),
-            Orders::Status::OPEN,
-            document["size"].get_double_in_string().value());
+                document["time"].GetString()),
+            document["product_id"].GetString(),
+            Orders::Status::RECEIVED,
+            std::stod(document["size"].GetString()));
     }
 
     /* Status update that order is open and still in the book */
@@ -245,16 +239,16 @@ namespace Adapters::CoinbasePro::Stream
          * }
          */
 
-        Events::OrderStatus orderStatus(
-            std::string(document["order_id"].get_string().value()),
-            Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                std::string(document["time"].get_string().value())),
-            std::string(document["product_id"].get_string().value()),
-            Orders::Status::OPEN,
-            document["remaining_size"].get_double_in_string().value());
+        // Events::OrderStatus orderStatus();
 
         // Feed the strategy
-        this->eventQueue_->enqueue<Events::OrderStatus>(orderStatus);
+        this->eventQueue_->enqueue<Events::OrderStatus>(
+            document["order_id"].GetString(),
+            Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
+                document["time"].GetString()),
+            document["product_id"].GetString(),
+            Orders::Status::OPEN,
+            std::stod(document["remaining_size"].GetString()));
     }
 
     /* Status update that order is done */
@@ -278,7 +272,7 @@ namespace Adapters::CoinbasePro::Stream
          * }
          */
 
-        auto orderId = std::string(document["order_id"].get_string().value());
+        auto orderId = std::string(document["order_id"].GetString());
 
         // Remove the id from our map and feed the strategy
         this->myOrderIds_.erase(orderId);
@@ -287,8 +281,8 @@ namespace Adapters::CoinbasePro::Stream
         this->eventQueue_->enqueue<Events::OrderStatus>(
             orderId,
             Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                std::string(document["time"].get_string().value())),
-            std::string(document["product_id"].get_string().value()),
+                document["time"].GetString()),
+            document["product_id"].GetString(),
             Orders::Status::DONE, 0);
     }
 
@@ -318,17 +312,17 @@ namespace Adapters::CoinbasePro::Stream
          * }
          */
 
-        auto makerOrderId = std::string(document["maker_order_id"].get_string().value());
-        auto takerOrderId = std::string(document["taker_order_id"].get_string().value());
+        auto makerOrderId = std::string(document["maker_order_id"].GetString());
+        auto takerOrderId = std::string(document["taker_order_id"].GetString());
         bool isMaker = this->myOrderIds_.find(makerOrderId) != this->myOrderIds_.end();
 
         // Feed the strategy
         this->eventQueue_->enqueue<Events::Transaction>(
             isMaker ? makerOrderId : takerOrderId,
             Utils::Datetime::isostringToEpoch<std::chrono::nanoseconds>(
-                std::string(document["time"].get_string().value())),
-            std::string(document["product_id"].get_string().value()),
-            document["price"].get_double_in_string().value(),
-            document["size"].get_double_in_string().value());
+                document["time"].GetString()),
+            document["product_id"].GetString(),
+            std::stod(document["price"].GetString()),
+            std::stod(document["size"].GetString()));
     }
 }

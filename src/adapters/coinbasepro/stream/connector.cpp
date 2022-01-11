@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 
-namespace Adapters::CoinbasePro::Stream
+namespace CryptoConnect::CoinbasePro::Stream
 {
     /* Constructor */
     Connector::Connector(Auth *auth) : auth_(auth) {}
@@ -39,7 +39,6 @@ namespace Adapters::CoinbasePro::Stream
         {
             message.clear();
             this->wsClient_.read(message);
-            // message = R"({"type": "l2update", "product_id": "BTC-USD", "changes": [["buy", "1.23", "400.32"]], "time": "2022-01-01T10:00:00.123456"})";
             handler.onMessage(message);
         }
     }
@@ -47,6 +46,10 @@ namespace Adapters::CoinbasePro::Stream
     /* Subscribes to products */
     void Connector::subscribeProducts(Universe::Universe const &universe)
     {
+        // Guard clause for when called with empty universe
+        if (!universe.size())
+            return;
+
         std::string message;
         this->makeSubscriptionMessage("subscribe", universe, message);
         this->wsClient_.write(message);

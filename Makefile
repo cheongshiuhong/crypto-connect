@@ -1,12 +1,14 @@
-CFLAGS = -std=c++2a
+CC = g++
+CFLAGS = -std=c++2a -fPIC
+LDFLAGS = -shared
 LIBS = -lboost_system -lssl -lcrypto
-INCLUDE = -I /usr/include -I dependencies -I include
+INCLUDE = -I /usr/include -I dependencies -I include/cryptoconnect
 PFLAGS = -pthread
 
-coinbasepro:
-	g++ \
+cbpro:
+	$(CC) \
+		-o cbpro-adapter.so \
 		dependencies/yaml/yaml.cpp \
-		dependencies/simdjson/simdjson.cpp \
 		src/helpers/network/http/session.cpp \
 		src/helpers/network/websockets/client.cpp \
 		src/adapters/base.cpp \
@@ -16,9 +18,9 @@ coinbasepro:
 		src/adapters/coinbasepro/stream/connector.cpp \
 		src/adapters/coinbasepro/auth.cpp \
 		src/adapters/coinbasepro/adapter.cpp \
-		cbmain.cpp \
+		-g \
 		$(CFLAGS) \
+		$(LDFLAGS) \
 		$(INCLUDE) \
 		$(LIBS) \
-		$(PFLAGS) \
-		-o cbmain.o
+		$(PFLAGS)

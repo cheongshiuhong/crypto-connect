@@ -4,6 +4,7 @@
 #include "structs/orders.hpp"
 #include "structs/products.hpp"
 #include "structs/universe.hpp"
+#include "helpers/utils/exceptions.hpp"
 #include "adapters/base.hpp"
 #include "adapters/coinbasepro/auth.hpp"
 #include "adapters/coinbasepro/rest/connector.hpp"
@@ -13,10 +14,10 @@
 
 #include <thread>
 
-namespace Adapters::CoinbasePro
+namespace CryptoConnect::CoinbasePro
 {
-    Adapter::Adapter(Strategies::Base::Strategy *strategy)
-        : Adapters::Base::Adapter(strategy){};
+    Adapter::Adapter(BaseStrategy *strategy)
+        : BaseAdapter(strategy){};
 
     void Adapter::start()
     {
@@ -27,12 +28,26 @@ namespace Adapters::CoinbasePro
         // Use a separate thread for the recurring bar queries
         std::thread queryingThread(
             [this]
-            { this->barsScheduler_.queryBarsForever(); });
+            {
+                Utils::Exceptions::withHandler(
+                    [this]
+                    { this->barsScheduler_.queryBarsForever(); },
+                    [this]
+                    { this->strategy_->onExit(); },
+                    "[ERROR] Scheduler bars querying failed.");
+            });
 
         // Use a separate thread for the stream
         std::thread streamingThread(
             [this]
-            { this->streamConnector_.streamForever(this->streamHandler_); });
+            {
+                Utils::Exceptions::withHandler(
+                    [this]
+                    { this->streamConnector_.streamForever(this->streamHandler_); },
+                    [this]
+                    { this->strategy_->onExit(); },
+                    "[ERROR] Stream connector failed.");
+            });
 
         // Use the main thread for feeding the strategy
         this->feedStrategyForever();
@@ -47,6 +62,11 @@ namespace Adapters::CoinbasePro
         this->restConnector_.getProducts(this->productMap_, output);
     }
 
+    void Adapter::getCurrentUniverse(Universe::Universe &output)
+    {
+        output.update(this->currentUniverse_);
+    }
+
     Products::productPtr_t Adapter::lookupProductDetails(securityId_t const productId)
     {
         if (this->productMap_.find(productId) == this->productMap_.end())
@@ -59,6 +79,13 @@ namespace Adapters::CoinbasePro
         this->streamConnector_.unsubscribeProducts(this->currentUniverse_);
         this->currentUniverse_.update(universe);
         this->streamConnector_.subscribeProducts(this->currentUniverse_);
+    }
+
+    void Adapter::getBars(std::string const &productId, char const *granularity,
+                          std::string const &start, std::string const &end,
+                          Events::bars_t &output)
+    {
+        this->restConnector_.getBars(productId, granularity, start, end, output);
     }
 
     void Adapter::placeOrder(

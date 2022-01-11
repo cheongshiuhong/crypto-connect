@@ -4,7 +4,12 @@ config.yaml
 
 # Compiled files
 *.o
-*.exe
+*.so
+*.a
 
 # Misc
 /*.cpp
+
+# Python stuff
+venv/
+__pycache__/

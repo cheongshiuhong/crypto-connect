@@ -1,9 +1,9 @@
 #include "adapters/base.hpp"
-#include "strategies/base.hpp"
+#include "strategy.hpp"
 
-namespace Adapters::Base
+namespace CryptoConnect
 {
-    Adapter::Adapter(Strategies::Base::Strategy *const strategy)
+    BaseAdapter::BaseAdapter(BaseStrategy *const strategy)
     {
         this->strategy_ = strategy;
         this->strategy_->registerAdapter(this);
