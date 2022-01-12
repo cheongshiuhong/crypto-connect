@@ -1,9 +1,9 @@
-#include "adapters/coinbasepro/stream/connector.hpp"
+#include "cryptoconnect/adapters/coinbasepro/stream/connector.hpp"
 
-#include "helpers/network/websockets/client.hpp"
-#include "structs/universe.hpp"
-#include "adapters/coinbasepro/auth.hpp"
-#include "adapters/coinbasepro/stream/handler.hpp"
+#include "cryptoconnect/helpers/network/websockets/client.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/adapters/coinbasepro/auth.hpp"
+#include "cryptoconnect/adapters/coinbasepro/stream/handler.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>

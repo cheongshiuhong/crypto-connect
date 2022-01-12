@@ -1,7 +1,7 @@
-#include "adapters/coinbasepro/stream/handler.hpp"
+#include "cryptoconnect/adapters/coinbasepro/stream/handler.hpp"
 
-#include "helpers/utils/datetime.hpp"
-#include "structs/events.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
 
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -19,25 +19,25 @@ namespace CryptoConnect::CoinbasePro::Stream
         rapidjson::Document document;
         document.Parse(message.c_str());
 
-        auto typeView = std::string(document["type"].GetString());
+        auto type = std::string(document["type"].GetString());
 
-        if (typeView == "subscriptions")
+        if (type == "subscriptions")
             std::cout << "subscription event: " << message << '\n';
-        else if (typeView == "snapshot")
+        else if (type == "snapshot")
             this->handleSnapshot(document);
-        else if (typeView == "l2update") // Tick
+        else if (type == "l2update") // Tick
             this->handleTick(document);
-        else if (typeView == "ticker")
+        else if (type == "ticker")
             this->handleTrade(document); // Trade
-        else if (typeView == "received")
+        else if (type == "received")
             this->handleOrderReceipt(document); // Order Status (received)
-        else if (typeView == "open")
+        else if (type == "open")
             this->handleOrderOpen(document); // Order Status (open)
-        else if (typeView == "done")
+        else if (type == "done")
             this->handleOrderDone(document); // Order Status (done)
-        else if (typeView == "match")
+        else if (type == "match")
             this->handleOrderMatch(document); // Transaction
-        else if (typeView == "error")
+        else if (type == "error")
             std::cerr << "Error encountered: " << message << '\n';
         else
             std::cout << "Unrecognized event: " << message << '\n';
@@ -62,10 +62,6 @@ namespace CryptoConnect::CoinbasePro::Stream
         {
             // Read the product ID
             auto productId = std::string(document["product_id"].GetString());
-
-            // Extract ONLY the best asks and bids
-            // NOTE: 'asks' MUST go before 'bids' and 'price' MUST go before 'volume'
-            //        since we are using [ondemand] and have to adhere to the order of the JSON response string
             auto bestAskPrice = std::stod(document["asks"].GetArray()[0].GetArray()[0].GetString());
             auto bestAskVolume = std::stod(document["asks"].GetArray()[0].GetArray()[1].GetString());
             auto bestBidPrice = std::stod(document["bids"].GetArray()[0].GetArray()[0].GetString());
@@ -109,12 +105,6 @@ namespace CryptoConnect::CoinbasePro::Stream
             auto side = std::string(document["changes"].GetArray()[0].GetArray()[0].GetString());
             auto updatedPrice = std::stod(document["changes"].GetArray()[0].GetArray()[1].GetString());
             auto updatedVolume = std::stod(document["changes"].GetArray()[0].GetArray()[2].GetString());
-
-            // Guard-clause against 0-volume updates
-            // (Only useful if we are tracking the order book)
-            // TO REMOVE IF WE ARE TO TRACK ORDER BOOK
-            if (updatedVolume == 0)
-                return;
 
             // Pull out the reference to the current tick in the map
             Events::Tick &currentTick = this->tickTracker_[productId];
@@ -174,7 +164,8 @@ namespace CryptoConnect::CoinbasePro::Stream
                     document["time"].GetString()),
                 document["product_id"].GetString(),
                 std::stod(document["price"].GetString()),
-                std::stod(document["last_size"].GetString()), true);
+                std::stod(document["last_size"].GetString()),
+                std::string(document["side"].GetString()) == "buy");
         }
         catch (std::exception const &e)
         {

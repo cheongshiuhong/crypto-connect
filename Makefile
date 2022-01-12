@@ -1,9 +1,10 @@
+
 CC = g++
 CFLAGS = -std=c++2a -fPIC
 LDFLAGS = -shared
 LIBS = -lboost_system -lssl -lcrypto
 INCLUDE = -I /usr/include -I dependencies -I include/cryptoconnect
-PFLAGS = -pthread
+THREAD = -pthread
 
 cbpro:
 	$(CC) \
@@ -23,4 +24,4 @@ cbpro:
 		$(LDFLAGS) \
 		$(INCLUDE) \
 		$(LIBS) \
-		$(PFLAGS)
+		$(THREAD)

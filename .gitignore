@@ -3,6 +3,7 @@
 config.yaml
 
 # Compiled files
+build/
 *.o
 *.so
 *.a

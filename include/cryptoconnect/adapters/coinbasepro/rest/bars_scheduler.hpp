@@ -1,8 +1,6 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_REST_BARSSCHEDULER_H
 #define CRYPTOCONNECT_COINBASEPRO_REST_BARSSCHEDULER_H
 
-#include "build_config.h"
-
 /* Use only 2 threads in sandbox to minimize chances of exceeding rate-limit */
 #if IS_SANDBOX
 #define BAR_QUERY_THREADS 2
@@ -10,9 +8,9 @@
 #define BAR_QUERY_THREADS 8
 #endif
 
-#include "structs/events.hpp"
-#include "structs/event_queue.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/event_queue.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 #include <cstdint>
 #include <chrono>

@@ -2,8 +2,8 @@
 
 #include "./strategy.hpp"
 
-#include "structs/events.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 #include <boost/asio/thread_pool.hpp>
 

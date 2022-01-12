@@ -25,31 +25,32 @@ It is strongly advised to heavily test it in the sandbox before using it in live
 - [ ] Accounts
 
 
-## Build (CMake on the way)
+## Build
 
 This project is developed in Linux and should work on Unix-based systems.
 
-Build the shared object with the relevant `include/cryptoconnect/build_config.h` and link it (this is where it should be specified if it is for the sandbox or for live).
+Build the shared object and link it.
 
 ```shell
-$ make cbpro
+$ mkdir build && cd build
+$ cmake .. -B . -DEXCHANGE=cbpro -DMODE=[sandbox|live]
+$ make
 ```
-
+You can now move the libcryptoconnect-cbpro.so shared object to either your /usr/include or your project's directory
 
 ## Usage
 
-1. Include the header files `include/cryptoconnect`.
+1. Copy the header files `include/cryptoconnect` into your project.
 
-2. Then, include the adapter and implement the base strategy to handle the market events.
+2. Include the adapter and implement the base strategy to handle the market events.
 
-3. A `config.yaml` file is also expected for the provision of API keys, secrets, and passphrases as seen in [config.template.yaml](config.template.yaml).
+3. A `config.yaml` file is also expected in your project root for the provision of API keys, secrets, and passphrases as seen in [config.template.yaml](config.template.yaml).
 
 ```c++
-#include "cryptoconnect/adapters/coinbasepro.hpp"
-#include "cryptoconnect/strategy.hpp"
-#include "cryptoconnect/structs/events.hpp"
-#include "cryptoconnect/structs/orders.hpp"
-#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/strategy.hpp"           // The base strategy class to implement
+#include "cryptoconnect/structs/events.hpp"     // Event structs
+#include "cryptoconnect/structs/orders.hpp"     // Order structs
+#include "cryptoconnect/structs/universe.hpp"   // Universe struct
 
 class MyStrategy : public CryptoConnect::BaseStrategy
 {
@@ -82,7 +83,7 @@ public:
     void onTrade(Events::Trade trade)
     {
         // Do something when there is a trade/match in the market
-        if (trade.securityId_ == "BTC-USD" && trade.lastPrice_ < 40000)
+        if (trade.productId_ == "BTC-USD" && trade.lastPrice_ < 40000)
         {
             Orders::MarketOrder order(Orders::Side::BUY, "BTC-USD", 1.23);
             Orders::OrderResponse response;
@@ -107,6 +108,8 @@ public:
     }
 };
 
+#include "cryptoconnect/adapters/coinbasepro.hpp"   // The adapter
+
 int main()
 {
     MyStrategy myStrategy;
@@ -115,7 +118,11 @@ int main()
     adapter.start();
 }
 ```
-More details details can be found in the [examples](examples/cpp).
+
+Example of simply logging out the events received from the stream:
+<img src="./docs/assets/images/crypto-connect-screenshot.jpg" alt="Screenshot" width="1024" />
+
+More details can be found in [examples](examples/cpp).
 
 ## Future developments
 

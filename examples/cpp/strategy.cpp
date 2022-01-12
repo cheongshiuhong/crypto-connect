@@ -1,15 +1,15 @@
 #include "./strategy.hpp"
 
-#include "structs/events.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
-#include "helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
 
 #include "Python.h"
-#include "pyhelpers/cointegration_api.h"
-#include "pyhelpers/cointegration.h"
-#include "pyhelpers/stationarity_api.h"
-#include "pyhelpers/stationarity.h"
+#include "./pyhelpers/cointegration_api.h"
+#include "./pyhelpers/cointegration.h"
+#include "./pyhelpers/stationarity_api.h"
+#include "./pyhelpers/stationarity.h"
 
 #include <iostream>
 #include <string>
@@ -19,7 +19,7 @@
 /* Called when the adapter has been initialized */
 void CBProStrategy::onInit()
 {
-    std::cout << "[On Init]" << '\n';
+    std::cout << "[Init]" << '\n';
 
     // Do some initializing logic here (adapter is not yet connected to the exchange)
 }
@@ -27,7 +27,7 @@ void CBProStrategy::onInit()
 /* Called when the adapter is connected and starts*/
 void CBProStrategy::onStart()
 {
-    std::cout << "[On Start]" << '\n';
+    std::cout << "[Start]" << '\n';
 
     // We can get the available products and run them through some filtering logic
     Universe::Universe availableUniverse;
@@ -123,35 +123,35 @@ void CBProStrategy::onStart()
 
 void CBProStrategy::onBar(Events::Bar bar)
 {
-    std::cout << "[On Bar] " << bar << '\n';
+    std::cout << "[BarEvent] " << bar << '\n';
 
     // Do some stuff here
 }
 
 void CBProStrategy::onTick(Events::Tick tick)
 {
-    std::cout << "[On Tick] " << tick << '\n';
+    std::cout << "[TickEvent] " << tick << '\n';
 
     // Do some stuff here
 }
 
 void CBProStrategy::onTrade(Events::Trade trade)
 {
-    std::cout << "[On Trade] " << trade << '\n';
+    std::cout << "[TradeEvent] " << trade << '\n';
 
     // Do some stuff here
 }
 
 void CBProStrategy::onOrderStatus(Events::OrderStatus orderStatus)
 {
-    std::cout << "[On OrderStatus] " << orderStatus << '\n';
+    std::cout << "[OrderStatusEvent] " << orderStatus << '\n';
 
     // Do some stuff here
 }
 
 void CBProStrategy::onTransaction(Events::Transaction transaction)
 {
-    std::cout << "[On Transaction] " << transaction << '\n';
+    std::cout << "[TransactionEvent] " << transaction << '\n';
 
     // Do some stuff here
 }

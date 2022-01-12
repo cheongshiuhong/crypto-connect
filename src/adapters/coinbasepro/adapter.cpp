@@ -1,16 +1,16 @@
-#include "adapters/coinbasepro/adapter.hpp"
+#include "cryptoconnect/adapters/coinbasepro/adapter.hpp"
 
-#include "structs/events.hpp"
-#include "structs/orders.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
-#include "helpers/utils/exceptions.hpp"
-#include "adapters/base.hpp"
-#include "adapters/coinbasepro/auth.hpp"
-#include "adapters/coinbasepro/rest/connector.hpp"
-#include "adapters/coinbasepro/rest/bars_scheduler.hpp"
-#include "adapters/coinbasepro/stream/connector.hpp"
-#include "adapters/coinbasepro/stream/handler.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/orders.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/helpers/utils/exceptions.hpp"
+#include "cryptoconnect/adapters/base.hpp"
+#include "cryptoconnect/adapters/coinbasepro/auth.hpp"
+#include "cryptoconnect/adapters/coinbasepro/rest/connector.hpp"
+#include "cryptoconnect/adapters/coinbasepro/rest/bars_scheduler.hpp"
+#include "cryptoconnect/adapters/coinbasepro/stream/connector.hpp"
+#include "cryptoconnect/adapters/coinbasepro/stream/handler.hpp"
 
 #include <thread>
 
@@ -67,7 +67,7 @@ namespace CryptoConnect::CoinbasePro
         output.update(this->currentUniverse_);
     }
 
-    Products::productPtr_t Adapter::lookupProductDetails(securityId_t const productId)
+    Products::productPtr_t Adapter::lookupProductDetails(std::string const productId)
     {
         if (this->productMap_.find(productId) == this->productMap_.end())
             return nullptr;

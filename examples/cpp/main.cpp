@@ -1,9 +1,9 @@
-#include "adapters/coinbasepro/adapter.hpp"
+#include "cryptoconnect/adapters/coinbasepro.hpp"
 #include "./strategy.hpp"
 
 int main()
 {
     CBProStrategy strategy;
-    Adapters::CoinbasePro::Adapter adapter(&strategy);
+    CryptoConnect::CoinbasePro::Adapter adapter(&strategy);
     adapter.start();
 }

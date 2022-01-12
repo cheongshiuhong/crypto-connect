@@ -1,8 +1,6 @@
 #ifndef STRUCTS_ORDERES_H
 #define STRUCTS_ORDERES_H
 
-#include "build_config.h"
-
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -36,22 +34,22 @@ namespace Orders
     struct LimitOrder
     {
         Side side_;
-        securityId_t securityId_;
+        std::string productId_;
         double price_;
         double quantity_;
 
-        LimitOrder(Side side, securityId_t securityId, double price, double quantity)
-            : side_(side), securityId_(securityId), price_(price), quantity_(quantity){};
+        LimitOrder(Side side, std::string productId, double price, double quantity)
+            : side_(side), productId_(productId), price_(price), quantity_(quantity){};
     };
 
     struct MarketOrder
     {
         Side side_;
-        securityId_t securityId_;
+        std::string productId_;
         double quantity_;
 
-        MarketOrder(Side side, securityId_t securityId, double quantity)
-            : side_(side), securityId_(securityId), quantity_(quantity){};
+        MarketOrder(Side side, std::string productId, double quantity)
+            : side_(side), productId_(productId), quantity_(quantity){};
     };
 
     /* Order Id Types */
@@ -113,7 +111,7 @@ namespace Orders
         Side side_;
         Status status_;
         uint64_t epochTime_;
-        securityId_t securityId_;
+        std::string productId_;
         double price_;
         double quantity_;
         double quantityFilled_;
@@ -121,14 +119,14 @@ namespace Orders
 
         OrderDetails()
             : id_(""), type_(Type::UNKNOWN), side_(Side::UNKONWN), status_(Status::UNKNOWN),
-              epochTime_(0), securityId_(""), price_(0),
+              epochTime_(0), productId_(""), price_(0),
               quantity_(0), quantityFilled_(0), fees_(0){};
 
         OrderDetails(orderId_t id, Type type, Side side, Status status,
-                     uint64_t epochTime, securityId_t securityId, double price,
+                     uint64_t epochTime, std::string productId, double price,
                      double quantity, double quantityFilled, double fees)
             : id_(id), type_(type), side_(side), status_(status),
-              epochTime_(epochTime), securityId_(securityId), price_(price),
+              epochTime_(epochTime), productId_(productId), price_(price),
               quantity_(quantity), quantityFilled_(quantityFilled), fees_(fees){};
     };
 

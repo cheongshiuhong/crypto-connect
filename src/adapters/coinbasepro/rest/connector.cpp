@@ -1,12 +1,12 @@
-#include "adapters/coinbasepro/rest/connector.hpp"
+#include "cryptoconnect/adapters/coinbasepro/rest/connector.hpp"
 
-#include "helpers/network/http/session.hpp"
-#include "helpers/utils/datetime.hpp"
-#include "structs/events.hpp"
-#include "structs/orders.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
-#include "adapters/coinbasepro/auth.hpp"
+#include "cryptoconnect/helpers/network/http/session.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/orders.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/adapters/coinbasepro/auth.hpp"
 
 #include <boost/asio/thread_pool.hpp>
 #include <rapidjson/document.h>
@@ -143,7 +143,7 @@ namespace CryptoConnect::CoinbasePro::REST
         for (auto const &barJson : document.GetArray())
             output.emplace_back(
                 barJson[0].GetUint64() * 1000000000, // epoch time in nanoseconds
-                productId,                           // securityId
+                productId,                           // productId
                 barJson[3].GetDouble(),              // open
                 barJson[2].GetDouble(),              // high
                 barJson[1].GetDouble(),              // low
@@ -169,7 +169,7 @@ namespace CryptoConnect::CoinbasePro::REST
         auto orderAllocator = orderDocument.GetAllocator();
 
         rapidjson::Value productIdValue(rapidjson::kObjectType);
-        productIdValue.SetString(order.securityId_.c_str(), order.securityId_.size(), orderAllocator);
+        productIdValue.SetString(order.productId_.c_str(), order.productId_.size(), orderAllocator);
         orderDocument.AddMember("product_id", productIdValue, orderAllocator);
 
         rapidjson::Value uniqueOrderIdValue(rapidjson::kObjectType);
@@ -216,7 +216,7 @@ namespace CryptoConnect::CoinbasePro::REST
         auto orderAllocator = orderDocument.GetAllocator();
 
         rapidjson::Value productIdValue(rapidjson::kObjectType);
-        productIdValue.SetString(order.securityId_.c_str(), order.securityId_.size(), orderAllocator);
+        productIdValue.SetString(order.productId_.c_str(), order.productId_.size(), orderAllocator);
         orderDocument.AddMember("product_id", productIdValue, orderAllocator);
 
         rapidjson::Value uniqueOrderIdValue(rapidjson::kObjectType);

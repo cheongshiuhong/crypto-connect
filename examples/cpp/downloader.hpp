@@ -1,8 +1,8 @@
 #ifndef DOWNLOADER_H
 #define DOWNLOADER_H
 
-#include <structs/events.hpp>
-#include <structs/universe.hpp>
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 #include <string>
 #include <unordered_map>

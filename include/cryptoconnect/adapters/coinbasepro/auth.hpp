@@ -1,15 +1,13 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_AUTH_H
 #define CRYPTOCONNECT_COINBASEPRO_AUTH_H
 
-#include "build_config.h"
-
 #if IS_SANDBOX
 #define COINBASEPRO_CONFIG_KEY "sandbox"
 #else
 #define COINBASEPRO_CONFIG_KEY "live"
 #endif
 
-#include "helpers/network/http/session.hpp"
+#include "cryptoconnect/helpers/network/http/session.hpp"
 
 #include <string>
 

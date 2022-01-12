@@ -1,8 +1,8 @@
 #ifndef STRATEGY_H
 #define STRATEGY_H
 
-#include "adapters/coinbasepro/adapter.hpp"
-#include "strategies/base.hpp"
+#include "cryptoconnect/adapters/coinbasepro.hpp"
+#include "cryptoconnect/strategy.hpp"
 
 #include "./downloader.hpp"
 #include "./filter.hpp"
@@ -22,7 +22,7 @@ struct MRTradingPair
 };
 
 /* Implement the base strategy */
-class CBProStrategy : public Strategies::Base::Strategy
+class CBProStrategy : public CryptoConnect::BaseStrategy
 {
 private:
     /* Helpers */

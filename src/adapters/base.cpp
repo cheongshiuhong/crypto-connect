@@ -1,5 +1,5 @@
-#include "adapters/base.hpp"
-#include "strategy.hpp"
+#include "cryptoconnect/adapters/base.hpp"
+#include "cryptoconnect/strategy.hpp"
 
 namespace CryptoConnect
 {

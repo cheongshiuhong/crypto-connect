@@ -1,13 +1,11 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_HTTP_CONNECTOR_H
 #define CRYPTOCONNECT_COINBASEPRO_HTTP_CONNECTOR_H
 
-#include "build_config.h"
-
-#include "helpers/network/http/session.hpp"
-#include "structs/events.hpp"
-#include "structs/orders.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/helpers/network/http/session.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/orders.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 #include <rapidjson/document.h>
 

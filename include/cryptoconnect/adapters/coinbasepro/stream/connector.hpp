@@ -1,10 +1,8 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_STREAM_CONNECTOR_H
 #define CRYPTOCONNECT_COINBASEPRO_STREAM_CONNECTOR_H
 
-#include "build_config.h"
-
-#include "helpers/network/websockets/client.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/helpers/network/websockets/client.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 #if IS_SANDBOX
 #define COINBASEPRO_WS_ENDPOINT "ws-feed-public.sandbox.exchange.coinbase.com"

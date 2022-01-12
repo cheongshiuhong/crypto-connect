@@ -1,9 +1,9 @@
-#include "adapters/coinbasepro/rest/bars_scheduler.hpp"
+#include "cryptoconnect/adapters/coinbasepro/rest/bars_scheduler.hpp"
 
-#include "helpers/utils/datetime.hpp"
-#include "structs/events.hpp"
-#include "structs/universe.hpp"
-#include "adapters/coinbasepro/rest/connector.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/adapters/coinbasepro/rest/connector.hpp"
 
 #include <boost/asio/thread_pool.hpp>
 #include <rapidjson/document.h>
@@ -124,7 +124,7 @@ namespace CryptoConnect::CoinbasePro::REST
                     {
                         this->eventQueue_->enqueue<Events::Bar>(
                             (barJson[0].GetUint64() + 60) * 1000000000, // epoch time in nanoseconds (+1 since coinbase gives time as start of agg interval)
-                            productId,                                  // securityId
+                            productId,                                  // productId
                             barJson[3].GetDouble(),                     // open
                             barJson[2].GetDouble(),                     // high
                             barJson[1].GetDouble(),                     // low

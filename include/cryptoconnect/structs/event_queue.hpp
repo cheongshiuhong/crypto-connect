@@ -1,8 +1,6 @@
 #ifndef STRUCTS_EVENTQUEUE_H
 #define STRUCTS_EVENTQUEUE_H
 
-#include "build_config.h"
-
 #include "./events.hpp"
 
 #include <queue>
@@ -35,7 +33,7 @@ namespace Events
             this->hasSpace_.wait(
                 lock,
                 [this]
-                { return this->queue_.size() < MAX_EVENT_QUEUE_SIZE; });
+                { return this->queue_.size() < 1000; });
 
             // Emplace the event into the queue now that there is space
             this->queue_.emplace(T(std::forward<Args>(args)...));

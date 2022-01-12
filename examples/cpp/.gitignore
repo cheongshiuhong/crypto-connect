@@ -1,0 +1,6 @@
+build/
+pyhelpers/*.cpp
+pyhelpers/*.c
+pyhelpers/*.h
+pyhelpers/*.so
+*.so

@@ -1,8 +1,8 @@
 #ifndef UNIVERSE_FILTER_H
 #define UNIVERSE_FILTER_H
 
-#include "structs/universe.hpp"
-#include "structs/events.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/structs/events.hpp"
 
 #include <unordered_map>
 

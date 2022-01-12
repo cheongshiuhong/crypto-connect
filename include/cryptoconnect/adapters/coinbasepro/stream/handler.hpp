@@ -1,11 +1,9 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_STREAM_HANDLER_H
 #define CRYPTOCONNECT_COINBASEPRO_STREAM_HANDLER_H
 
-#include "build_config.h"
-
-#include "helpers/utils/datetime.hpp"
-#include "structs/events.hpp"
-#include "structs/event_queue.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/event_queue.hpp"
 
 #include <rapidjson/document.h>
 
@@ -26,7 +24,7 @@ namespace CryptoConnect::CoinbasePro::Stream
          * We need to track the snapshots and previous ticks for each security
          * since l2updates only provide the updated bid/ask side's info
          */
-        std::unordered_map<securityId_t, Events::Tick> tickTracker_;
+        std::unordered_map<std::string, Events::Tick> tickTracker_;
 
         /** We need to track our order IDs */
         std::unordered_set<std::string> myOrderIds_;

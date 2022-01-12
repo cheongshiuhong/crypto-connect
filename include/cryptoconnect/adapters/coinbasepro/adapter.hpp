@@ -1,13 +1,11 @@
 #ifndef CRYPTOCONNECT_COINBASEPRO_ADAPTER_H
 #define CRYPTOCONNECT_COINBASEPRO_ADAPTER_H
 
-#include "build_config.h"
-
-#include "strategy.hpp"
-#include "structs/events.hpp"
-#include "structs/orders.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/strategy.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/orders.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 #include "../base.hpp"
 #include "./auth.hpp"
 #include "./rest/connector.hpp"
@@ -56,7 +54,7 @@ namespace CryptoConnect::CoinbasePro
         void getAvailableUniverse(Universe::Universe &output);
         void getCurrentUniverse(Universe::Universe &output);
         void updateUniverse(Universe::Universe const &universe);
-        Products::productPtr_t lookupProductDetails(securityId_t const productId);
+        Products::productPtr_t lookupProductDetails(std::string const productId);
 
         /* Data */
         void getBars(std::string const &productId, char const *granularity,

@@ -2,9 +2,9 @@
 
 #include "./strategy.hpp"
 
-#include "structs/events.hpp"
-#include "structs/universe.hpp"
-#include "helpers/utils/datetime.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/universe.hpp"
+#include "cryptoconnect/helpers/utils/datetime.hpp"
 
 #include <boost/asio/thread_pool.hpp>
 
@@ -62,7 +62,7 @@ void CBProUniverseFilter::filterTopPriceVolume(
                       [&](std::string id1, std::string id2)
                       { return priceVolumesMap[id1] > priceVolumesMap[id2]; });
 
-    // Write the top N into the universe
+    // Remove the non top N from the universe
     for (int i = nToExtract; i < universeVec.size(); i++)
         universe.erase(universeVec[i]);
 }

@@ -12,9 +12,9 @@ namespace CryptoConnect
     class BaseStrategy
     {
     public:
-        CryptoConnect::BaseAdapter *adapter_;
+        BaseAdapter *adapter_;
 
-        inline void registerAdapter(CryptoConnect::BaseAdapter *adapter)
+        inline void registerAdapter(BaseAdapter *adapter)
         {
             this->adapter_ = adapter;
         }

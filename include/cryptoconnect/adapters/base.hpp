@@ -1,12 +1,10 @@
 #ifndef CRYPTOCONNECT_BASEADAPTER_H
 #define CRYPTOCONNECT_BASEADAPTER_H
 
-#include "build_config.h"
-
-#include "structs/events.hpp"
-#include "structs/orders.hpp"
-#include "structs/products.hpp"
-#include "structs/universe.hpp"
+#include "cryptoconnect/structs/events.hpp"
+#include "cryptoconnect/structs/orders.hpp"
+#include "cryptoconnect/structs/products.hpp"
+#include "cryptoconnect/structs/universe.hpp"
 
 /* Forward declarations */
 namespace CryptoConnect
@@ -32,7 +30,7 @@ namespace CryptoConnect
         virtual void getAvailableUniverse(Universe::Universe &output) = 0;
         virtual void getCurrentUniverse(Universe::Universe &output) = 0;
         virtual void updateUniverse(Universe::Universe const &universe) = 0;
-        virtual Products::productPtr_t lookupProductDetails(securityId_t const productId) = 0;
+        virtual Products::productPtr_t lookupProductDetails(std::string const productId) = 0;
 
         virtual void getBars(std::string const &productId, char const *granularity,
                              std::string const &start, std::string const &end,

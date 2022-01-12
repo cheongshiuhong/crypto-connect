@@ -1,8 +1,6 @@
 #ifndef PRODUCTS_PRODUCT_H
 #define PRODUCTS_PRODUCT_H
 
-#include "build_config.h"
-
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -39,7 +37,7 @@ namespace Products
     };
 
     using productPtr_t = std::shared_ptr<Product>;
-    using productMap_t = std::unordered_map<securityId_t, productPtr_t>;
+    using productMap_t = std::unordered_map<std::string, productPtr_t>;
 }
 
 #endif

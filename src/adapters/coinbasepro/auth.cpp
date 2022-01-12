@@ -1,8 +1,8 @@
-#include "adapters/coinbasepro/auth.hpp"
+#include "cryptoconnect/adapters/coinbasepro/auth.hpp"
 
-#include "helpers/network/http/session.hpp"
-#include "helpers/utils/base64.hpp"
-#include "helpers/utils/cryptography.hpp"
+#include "cryptoconnect/helpers/network/http/session.hpp"
+#include "cryptoconnect/helpers/utils/base64.hpp"
+#include "cryptoconnect/helpers/utils/cryptography.hpp"
 
 #include <yaml/yaml.hpp>
 #include <boost/algorithm/string/replace.hpp>

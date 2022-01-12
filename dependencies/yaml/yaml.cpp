@@ -23,7 +23,7 @@
 *
 */
 
-#include "yaml.hpp"
+#include "yaml/yaml.hpp"
 #include <memory>
 #include <fstream>
 #include <sstream>
@@ -32,57 +32,53 @@
 #include <cstdio>
 #include <stdarg.h>
 
-
 // Implementation access definitions.
-#define NODE_IMP static_cast<NodeImp*>(m_pImp)
-#define NODE_IMP_EXT(node) static_cast<NodeImp*>(node.m_pImp)
-#define TYPE_IMP static_cast<NodeImp*>(m_pImp)->m_pImp
+#define NODE_IMP static_cast<NodeImp *>(m_pImp)
+#define NODE_IMP_EXT(node) static_cast<NodeImp *>(node.m_pImp)
+#define TYPE_IMP static_cast<NodeImp *>(m_pImp)->m_pImp
 
-
-#define IT_IMP static_cast<IteratorImp*>(m_pImp)
-
+#define IT_IMP static_cast<IteratorImp *>(m_pImp)
 
 namespace Yaml
 {
     class ReaderLine;
 
     // Exception message definitions.
-    static const std::string g_ErrorInvalidCharacter        = "Invalid character found.";
-    static const std::string g_ErrorKeyMissing              = "Missing key.";
-    static const std::string g_ErrorKeyIncorrect            = "Incorrect key.";
-    static const std::string g_ErrorValueIncorrect          = "Incorrect value.";
-    static const std::string g_ErrorTabInOffset             = "Tab found in offset.";
+    static const std::string g_ErrorInvalidCharacter = "Invalid character found.";
+    static const std::string g_ErrorKeyMissing = "Missing key.";
+    static const std::string g_ErrorKeyIncorrect = "Incorrect key.";
+    static const std::string g_ErrorValueIncorrect = "Incorrect value.";
+    static const std::string g_ErrorTabInOffset = "Tab found in offset.";
     static const std::string g_ErrorBlockSequenceNotAllowed = "Sequence entries are not allowed in this context.";
-    static const std::string g_ErrorUnexpectedDocumentEnd   = "Unexpected document end.";
-    static const std::string g_ErrorDiffEntryNotAllowed     = "Different entry is not allowed in this context.";
-    static const std::string g_ErrorIncorrectOffset         = "Incorrect offset.";
-    static const std::string g_ErrorSequenceError           = "Error in sequence node.";
-    static const std::string g_ErrorCannotOpenFile          = "Cannot open file.";
-    static const std::string g_ErrorIndentation             = "Space indentation is less than 2.";
-    static const std::string g_ErrorInvalidBlockScalar      = "Invalid block scalar.";
-    static const std::string g_ErrorInvalidQuote            = "Invalid quote.";
-    static const std::string g_EmptyString                  = "";
-    static Yaml::Node        g_NoneNode;
+    static const std::string g_ErrorUnexpectedDocumentEnd = "Unexpected document end.";
+    static const std::string g_ErrorDiffEntryNotAllowed = "Different entry is not allowed in this context.";
+    static const std::string g_ErrorIncorrectOffset = "Incorrect offset.";
+    static const std::string g_ErrorSequenceError = "Error in sequence node.";
+    static const std::string g_ErrorCannotOpenFile = "Cannot open file.";
+    static const std::string g_ErrorIndentation = "Space indentation is less than 2.";
+    static const std::string g_ErrorInvalidBlockScalar = "Invalid block scalar.";
+    static const std::string g_ErrorInvalidQuote = "Invalid quote.";
+    static const std::string g_EmptyString = "";
+    static Yaml::Node g_NoneNode;
 
     // Global function definitions. Implemented at end of this source file.
-    static std::string ExceptionMessage(const std::string & message, ReaderLine & line);
-    static std::string ExceptionMessage(const std::string & message, ReaderLine & line, const size_t errorPos);
-    static std::string ExceptionMessage(const std::string & message, const size_t errorLine, const size_t errorPos);
-    static std::string ExceptionMessage(const std::string & message, const size_t errorLine, const std::string & data);
+    static std::string ExceptionMessage(const std::string &message, ReaderLine &line);
+    static std::string ExceptionMessage(const std::string &message, ReaderLine &line, const size_t errorPos);
+    static std::string ExceptionMessage(const std::string &message, const size_t errorLine, const size_t errorPos);
+    static std::string ExceptionMessage(const std::string &message, const size_t errorLine, const std::string &data);
 
-    static bool FindQuote(const std::string & input, size_t & start, size_t & end, size_t searchPos = 0);
-    static size_t FindNotCited(const std::string & input, char token, size_t & preQuoteCount);
-    static size_t FindNotCited(const std::string & input, char token);
-    static bool ValidateQuote(const std::string & input);
-    static void CopyNode(const Node & from, Node & to);
-    static bool ShouldBeCited(const std::string & key);
-    static void AddEscapeTokens(std::string & input, const std::string & tokens);
-    static void RemoveAllEscapeTokens(std::string & input);
+    static bool FindQuote(const std::string &input, size_t &start, size_t &end, size_t searchPos = 0);
+    static size_t FindNotCited(const std::string &input, char token, size_t &preQuoteCount);
+    static size_t FindNotCited(const std::string &input, char token);
+    static bool ValidateQuote(const std::string &input);
+    static void CopyNode(const Node &from, Node &to);
+    static bool ShouldBeCited(const std::string &key);
+    static void AddEscapeTokens(std::string &input, const std::string &tokens);
+    static void RemoveAllEscapeTokens(std::string &input);
 
     // Exception implementations
-    Exception::Exception(const std::string & message, const eType type) :
-        std::runtime_error(message),
-        m_Type(type)
+    Exception::Exception(const std::string &message, const eType type) : std::runtime_error(message),
+                                                                         m_Type(type)
     {
     }
 
@@ -91,71 +87,61 @@ namespace Yaml
         return m_Type;
     }
 
-    const char * Exception::Message() const
+    const char *Exception::Message() const
     {
         return what();
     }
 
-    InternalException::InternalException(const std::string & message) :
-        Exception(message, InternalError)
+    InternalException::InternalException(const std::string &message) : Exception(message, InternalError)
     {
-
     }
 
-    ParsingException::ParsingException(const std::string & message) :
-        Exception(message, ParsingError)
+    ParsingException::ParsingException(const std::string &message) : Exception(message, ParsingError)
     {
-
     }
 
-    OperationException::OperationException(const std::string & message) :
-        Exception(message, OperationError)
+    OperationException::OperationException(const std::string &message) : Exception(message, OperationError)
     {
-
     }
-
 
     class TypeImp
     {
 
     public:
-
         virtual ~TypeImp()
         {
         }
 
-        virtual const std::string & GetData() const = 0;
-        virtual bool SetData(const std::string & data) = 0;
+        virtual const std::string &GetData() const = 0;
+        virtual bool SetData(const std::string &data) = 0;
         virtual size_t GetSize() const = 0;
-        virtual Node * GetNode(const size_t index) = 0;
-        virtual Node * GetNode(const std::string & key) = 0;
-        virtual Node * Insert(const size_t index) = 0;
-        virtual Node * PushFront() = 0;
-        virtual Node * PushBack() = 0;
+        virtual Node *GetNode(const size_t index) = 0;
+        virtual Node *GetNode(const std::string &key) = 0;
+        virtual Node *Insert(const size_t index) = 0;
+        virtual Node *PushFront() = 0;
+        virtual Node *PushBack() = 0;
         virtual void Erase(const size_t index) = 0;
-        virtual void Erase(const std::string & key) = 0;
-
+        virtual void Erase(const std::string &key) = 0;
     };
 
     class SequenceImp : public TypeImp
     {
 
     public:
-
         ~SequenceImp()
         {
-            for(auto it = m_Sequence.begin(); it != m_Sequence.end(); it++)
+            for (auto it = m_Sequence.begin(); it != m_Sequence.end(); it++)
             {
                 delete it->second;
             }
         }
 
-        virtual const std::string & GetData() const
+        virtual const std::string &GetData() const
         {
             return g_EmptyString;
         }
 
-        virtual bool SetData(const std::string & data)
+        virtual bool SetData(const std::string &data)
         {
             return false;
         }
@@ -165,78 +151,78 @@ namespace Yaml
             return m_Sequence.size();
         }
 
-        virtual Node * GetNode(const size_t index)
+        virtual Node *GetNode(const size_t index)
         {
             auto it = m_Sequence.find(index);
-            if(it != m_Sequence.end())
+            if (it != m_Sequence.end())
             {
                 return it->second;
             }
             return nullptr;
         }
 
-        virtual Node * GetNode(const std::string & key)
+        virtual Node *GetNode(const std::string &key)
         {
             return nullptr;
         }
 
-        virtual Node * Insert(const size_t index)
+        virtual Node *Insert(const size_t index)
         {
-            if(m_Sequence.size() == 0)
+            if (m_Sequence.size() == 0)
             {
-                Node * pNode = new Node;
+                Node *pNode = new Node;
                 m_Sequence.insert({0, pNode});
                 return pNode;
             }
 
-            if(index >= m_Sequence.size())
+            if (index >= m_Sequence.size())
             {
                 auto it = m_Sequence.end();
                 --it;
-                Node * pNode = new Node;
+                Node *pNode = new Node;
                 m_Sequence.insert({it->first, pNode});
                 return pNode;
             }
 
             auto it = m_Sequence.cbegin();
-            while(it != m_Sequence.cend())
+            while (it != m_Sequence.cend())
             {
-                m_Sequence[it->first+1] = it->second;
+                m_Sequence[it->first + 1] = it->second;
 
-                if(it->first == index)
+                if (it->first == index)
                 {
                     break;
                 }
             }
 
-            Node * pNode = new Node;
+            Node *pNode = new Node;
             m_Sequence.insert({index, pNode});
             return pNode;
         }
 
-        virtual Node * PushFront()
+        virtual Node *PushFront()
         {
-            for(auto it = m_Sequence.cbegin(); it != m_Sequence.cend(); it++)
+            for (auto it = m_Sequence.cbegin(); it != m_Sequence.cend(); it++)
             {
-                m_Sequence[it->first+1] = it->second;
+                m_Sequence[it->first + 1] = it->second;
             }
 
-            Node * pNode = new Node;
+            Node *pNode = new Node;
             m_Sequence.insert({0, pNode});
             return pNode;
         }
 
-        virtual Node * PushBack()
+        virtual Node *PushBack()
         {
             size_t index = 0;
-            if(m_Sequence.size())
+            if (m_Sequence.size())
             {
                 auto it = m_Sequence.end();
                 --it;
                 index = it->first + 1;
             }
 
-            Node * pNode = new Node;
+            Node *pNode = new Node;
             m_Sequence.insert({index, pNode});
             return pNode;
         }
@@ -244,7 +230,7 @@ namespace Yaml
         virtual void Erase(const size_t index)
         {
             auto it = m_Sequence.find(index);
-            if(it == m_Sequence.end())
+            if (it == m_Sequence.end())
             {
                 return;
             }
@@ -252,33 +238,31 @@ namespace Yaml
             m_Sequence.erase(index);
         }
 
-        virtual void Erase(const std::string & key)
+        virtual void Erase(const std::string &key)
         {
         }
 
-        std::map<size_t, Node*> m_Sequence;
-
+        std::map<size_t, Node *> m_Sequence;
     };
 
     class MapImp : public TypeImp
     {
 
     public:
-
         ~MapImp()
         {
-            for(auto it = m_Map.begin(); it != m_Map.end(); it++)
+            for (auto it = m_Map.begin(); it != m_Map.end(); it++)
             {
                 delete it->second;
             }
         }
 
-        virtual const std::string & GetData() const
+        virtual const std::string &GetData() const
         {
             return g_EmptyString;
         }
 
-        virtual bool SetData(const std::string & data)
+        virtual bool SetData(const std::string &data)
         {
             return false;
         }
@@ -288,34 +272,34 @@ namespace Yaml
             return m_Map.size();
         }
 
-        virtual Node * GetNode(const size_t index)
+        virtual Node *GetNode(const size_t index)
         {
             return nullptr;
         }
 
-        virtual Node * GetNode(const std::string & key)
+        virtual Node *GetNode(const std::string &key)
         {
             auto it = m_Map.find(key);
-            if(it == m_Map.end())
+            if (it == m_Map.end())
             {
-                Node * pNode = new Node;
+                Node *pNode = new Node;
                 m_Map.insert({key, pNode});
                 return pNode;
             }
             return it->second;
         }
 
-        virtual Node * Insert(const size_t index)
+        virtual Node *Insert(const size_t index)
         {
             return nullptr;
         }
 
-        virtual Node * PushFront()
+        virtual Node *PushFront()
         {
             return nullptr;
         }
 
-        virtual Node * PushBack()
+        virtual Node *PushBack()
         {
             return nullptr;
         }
@@ -324,10 +308,10 @@ namespace Yaml
         {
         }
 
-        virtual void Erase(const std::string & key)
+        virtual void Erase(const std::string &key)
         {
             auto it = m_Map.find(key);
-            if(it == m_Map.end())
+            if (it == m_Map.end())
             {
                 return;
             }
@@ -335,25 +319,23 @@ namespace Yaml
             m_Map.erase(key);
         }
 
-        std::map<std::string, Node*> m_Map;
-
+        std::map<std::string, Node *> m_Map;
     };
 
     class ScalarImp : public TypeImp
     {
 
     public:
-
         ~ScalarImp()
         {
         }
 
-        virtual const std::string & GetData() const
+        virtual const std::string &GetData() const
         {
             return m_Value;
         }
 
-        virtual bool SetData(const std::string & data)
+        virtual bool SetData(const std::string &data)
         {
             m_Value = data;
             return true;
@@ -364,27 +346,27 @@ namespace Yaml
             return 0;
         }
 
-        virtual Node * GetNode(const size_t index)
+        virtual Node *GetNode(const size_t index)
         {
             return nullptr;
         }
 
-        virtual Node * GetNode(const std::string & key)
+        virtual Node *GetNode(const std::string &key)
         {
             return nullptr;
         }
 
-        virtual Node * Insert(const size_t index)
+        virtual Node *Insert(const size_t index)
         {
             return nullptr;
         }
 
-        virtual Node * PushFront()
+        virtual Node *PushFront()
         {
             return nullptr;
         }
 
-        virtual Node * PushBack()
+        virtual Node *PushBack()
         {
             return nullptr;
         }
@@ -393,24 +375,20 @@ namespace Yaml
         {
         }
 
-        virtual void Erase(const std::string & key)
+        virtual void Erase(const std::string &key)
         {
         }
 
         std::string m_Value;
-
     };
-
 
     // Node implementations.
     class NodeImp
     {
 
     public:
-
-        NodeImp() :
-            m_Type(Node::None),
-            m_pImp(nullptr)
+        NodeImp() : m_Type(Node::None),
+                    m_pImp(nullptr)
         {
         }
 
@@ -421,7 +399,7 @@ namespace Yaml
 
         void Clear()
         {
-            if(m_pImp != nullptr)
+            if (m_pImp != nullptr)
             {
                 delete m_pImp;
                 m_pImp = nullptr;
@@ -431,9 +409,9 @@ namespace Yaml
 
         void InitSequence()
         {
-            if(m_Type != Node::SequenceType || m_pImp == nullptr)
+            if (m_Type != Node::SequenceType || m_pImp == nullptr)
             {
-                if(m_pImp)
+                if (m_pImp)
                 {
                     delete m_pImp;
                 }
@@ -444,9 +422,9 @@ namespace Yaml
 
         void InitMap()
         {
-            if(m_Type != Node::MapType || m_pImp == nullptr)
+            if (m_Type != Node::MapType || m_pImp == nullptr)
             {
-                if(m_pImp)
+                if (m_pImp)
                 {
                     delete m_pImp;
                 }
@@ -457,21 +435,19 @@ namespace Yaml
 
         void InitScalar()
         {
-            if(m_Type != Node::ScalarType || m_pImp == nullptr)
+            if (m_Type != Node::ScalarType || m_pImp == nullptr)
             {
-                if(m_pImp)
+                if (m_pImp)
                 {
                     delete m_pImp;
                 }
                 m_pImp = new ScalarImp;
                 m_Type = Node::ScalarType;
             }
-
         }
 
-        Node::eType    m_Type;  ///< Type of node.
-        TypeImp *      m_pImp;  ///< Imp of type.
-
+        Node::eType m_Type; ///< Type of node.
+        TypeImp *m_pImp;    ///< Imp of type.
     };
 
     // Iterator implementation class
@@ -479,212 +455,198 @@ namespace Yaml
     {
 
     public:
-
         virtual ~IteratorImp()
         {
         }
 
         virtual Node::eType GetType() const = 0;
-        virtual void InitBegin(SequenceImp * pSequenceImp) = 0;
-        virtual void InitEnd(SequenceImp * pSequenceImp) = 0;
-        virtual void InitBegin(MapImp * pMapImp) = 0;
-        virtual void InitEnd(MapImp * pMapImp) = 0;
-
+        virtual void InitBegin(SequenceImp *pSequenceImp) = 0;
+        virtual void InitEnd(SequenceImp *pSequenceImp) = 0;
+        virtual void InitBegin(MapImp *pMapImp) = 0;
+        virtual void InitEnd(MapImp *pMapImp) = 0;
     };
 
     class SequenceIteratorImp : public IteratorImp
     {
 
     public:
-
         virtual Node::eType GetType() const
         {
             return Node::SequenceType;
         }
 
-        virtual void InitBegin(SequenceImp * pSequenceImp)
+        virtual void InitBegin(SequenceImp *pSequenceImp)
         {
             m_Iterator = pSequenceImp->m_Sequence.begin();
         }
 
-        virtual void InitEnd(SequenceImp * pSequenceImp)
+        virtual void InitEnd(SequenceImp *pSequenceImp)
         {
             m_Iterator = pSequenceImp->m_Sequence.end();
         }
 
-        virtual void InitBegin(MapImp * pMapImp)
+        virtual void InitBegin(MapImp *pMapImp)
         {
         }
 
-        virtual void InitEnd(MapImp * pMapImp)
+        virtual void InitEnd(MapImp *pMapImp)
         {
         }
 
-        void Copy(const SequenceIteratorImp & it)
+        void Copy(const SequenceIteratorImp &it)
         {
             m_Iterator = it.m_Iterator;
         }
 
         std::map<size_t, Node *>::iterator m_Iterator;
-
     };
 
     class MapIteratorImp : public IteratorImp
     {
 
     public:
-
         virtual Node::eType GetType() const
         {
             return Node::MapType;
         }
 
-        virtual void InitBegin(SequenceImp * pSequenceImp)
+        virtual void InitBegin(SequenceImp *pSequenceImp)
         {
         }
 
-        virtual void InitEnd(SequenceImp * pSequenceImp)
+        virtual void InitEnd(SequenceImp *pSequenceImp)
         {
         }
 
-        virtual void InitBegin(MapImp * pMapImp)
+        virtual void InitBegin(MapImp *pMapImp)
         {
             m_Iterator = pMapImp->m_Map.begin();
         }
 
-        virtual void InitEnd(MapImp * pMapImp)
+        virtual void InitEnd(MapImp *pMapImp)
         {
             m_Iterator = pMapImp->m_Map.end();
         }
 
-        void Copy(const MapIteratorImp & it)
+        void Copy(const MapIteratorImp &it)
         {
             m_Iterator = it.m_Iterator;
         }
 
         std::map<std::string, Node *>::iterator m_Iterator;
-
     };
 
     class SequenceConstIteratorImp : public IteratorImp
     {
 
     public:
-
         virtual Node::eType GetType() const
         {
             return Node::SequenceType;
         }
 
-        virtual void InitBegin(SequenceImp * pSequenceImp)
+        virtual void InitBegin(SequenceImp *pSequenceImp)
         {
             m_Iterator = pSequenceImp->m_Sequence.begin();
         }
 
-        virtual void InitEnd(SequenceImp * pSequenceImp)
+        virtual void InitEnd(SequenceImp *pSequenceImp)
         {
             m_Iterator = pSequenceImp->m_Sequence.end();
         }
 
-        virtual void InitBegin(MapImp * pMapImp)
+        virtual void InitBegin(MapImp *pMapImp)
         {
         }
 
-        virtual void InitEnd(MapImp * pMapImp)
+        virtual void InitEnd(MapImp *pMapImp)
         {
         }
 
-        void Copy(const SequenceConstIteratorImp & it)
+        void Copy(const SequenceConstIteratorImp &it)
         {
             m_Iterator = it.m_Iterator;
         }
 
         std::map<size_t, Node *>::const_iterator m_Iterator;
-
     };
 
     class MapConstIteratorImp : public IteratorImp
     {
 
     public:
-
         virtual Node::eType GetType() const
         {
             return Node::MapType;
         }
 
-        virtual void InitBegin(SequenceImp * pSequenceImp)
+        virtual void InitBegin(SequenceImp *pSequenceImp)
         {
         }
 
-        virtual void InitEnd(SequenceImp * pSequenceImp)
+        virtual void InitEnd(SequenceImp *pSequenceImp)
         {
         }
 
-        virtual void InitBegin(MapImp * pMapImp)
+        virtual void InitBegin(MapImp *pMapImp)
         {
             m_Iterator = pMapImp->m_Map.begin();
         }
 
-        virtual void InitEnd(MapImp * pMapImp)
+        virtual void InitEnd(MapImp *pMapImp)
         {
             m_Iterator = pMapImp->m_Map.end();
         }
 
-        void Copy(const MapConstIteratorImp & it)
+        void Copy(const MapConstIteratorImp &it)
         {
             m_Iterator = it.m_Iterator;
         }
 
         std::map<std::string, Node *>::const_iterator m_Iterator;
-
     };
 
-
     // Iterator class
-    Iterator::Iterator() :
-        m_Type(None),
-        m_pImp(nullptr)
+    Iterator::Iterator() : m_Type(None),
+                           m_pImp(nullptr)
     {
     }
 
     Iterator::~Iterator()
     {
-        if(m_pImp)
+        if (m_pImp)
         {
-            switch(m_Type)
+            switch (m_Type)
             {
             case SequenceType:
-                delete static_cast<SequenceIteratorImp*>(m_pImp);
+                delete static_cast<SequenceIteratorImp *>(m_pImp);
                 break;
             case MapType:
-                delete static_cast<MapIteratorImp*>(m_pImp);
+                delete static_cast<MapIteratorImp *>(m_pImp);
                 break;
             default:
                 break;
             }
-
         }
     }
 
-    Iterator::Iterator(const Iterator & it) :
-        m_Type(None),
-        m_pImp(nullptr)
+    Iterator::Iterator(const Iterator &it) : m_Type(None),
+                                             m_pImp(nullptr)
     {
         *this = it;
     }
 
-    Iterator & Iterator::operator = (const Iterator & it)
+    Iterator &Iterator::operator=(const Iterator &it)
     {
-        if(m_pImp)
+        if (m_pImp)
         {
-            switch(m_Type)
+            switch (m_Type)
             {
             case SequenceType:
-                delete static_cast<SequenceIteratorImp*>(m_pImp);
+                delete static_cast<SequenceIteratorImp *>(m_pImp);
                 break;
             case MapType:
-                delete static_cast<MapIteratorImp*>(m_pImp);
+                delete static_cast<MapIteratorImp *>(m_pImp);
                 break;
             default:
                 break;
@@ -693,19 +655,19 @@ namespace Yaml
             m_Type = None;
         }
 
-        IteratorImp * pNewImp = nullptr;
+        IteratorImp *pNewImp = nullptr;
 
-        switch(it.m_Type)
+        switch (it.m_Type)
         {
         case SequenceType:
             m_Type = SequenceType;
             pNewImp = new SequenceIteratorImp;
-            static_cast<SequenceIteratorImp*>(pNewImp)->m_Iterator = static_cast<SequenceIteratorImp*>(it.m_pImp)->m_Iterator;
+            static_cast<SequenceIteratorImp *>(pNewImp)->m_Iterator = static_cast<SequenceIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         case MapType:
             m_Type = MapType;
             pNewImp = new MapIteratorImp;
-            static_cast<MapIteratorImp*>(pNewImp)->m_Iterator = static_cast<MapIteratorImp*>(it.m_pImp)->m_Iterator;
+            static_cast<MapIteratorImp *>(pNewImp)->m_Iterator = static_cast<MapIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         default:
             break;
@@ -715,34 +677,34 @@ namespace Yaml
         return *this;
     }
 
-    std::pair<const std::string &, Node &> Iterator::operator *()
+    std::pair<const std::string &, Node &> Iterator::operator*()
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            return { g_EmptyString, *(static_cast<SequenceIteratorImp*>(m_pImp)->m_Iterator->second)};
+            return {g_EmptyString, *(static_cast<SequenceIteratorImp *>(m_pImp)->m_Iterator->second)};
             break;
         case MapType:
-            return {static_cast<MapIteratorImp*>(m_pImp)->m_Iterator->first,
-                    *(static_cast<MapIteratorImp*>(m_pImp)->m_Iterator->second)};
+            return {static_cast<MapIteratorImp *>(m_pImp)->m_Iterator->first,
+                    *(static_cast<MapIteratorImp *>(m_pImp)->m_Iterator->second)};
             break;
         default:
             break;
         }
 
         g_NoneNode.Clear();
-        return { g_EmptyString, g_NoneNode};
+        return {g_EmptyString, g_NoneNode};
     }
 
-    Iterator & Iterator::operator ++ (int dummy)
+    Iterator &Iterator::operator++(int dummy)
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            static_cast<SequenceIteratorImp*>(m_pImp)->m_Iterator++;
+            static_cast<SequenceIteratorImp *>(m_pImp)->m_Iterator++;
             break;
         case MapType:
-            static_cast<MapIteratorImp*>(m_pImp)->m_Iterator++;
+            static_cast<MapIteratorImp *>(m_pImp)->m_Iterator++;
             break;
         default:
             break;
@@ -750,15 +712,15 @@ namespace Yaml
         return *this;
     }
 
-    Iterator & Iterator::operator -- (int dummy)
+    Iterator &Iterator::operator--(int dummy)
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            static_cast<SequenceIteratorImp*>(m_pImp)->m_Iterator--;
+            static_cast<SequenceIteratorImp *>(m_pImp)->m_Iterator--;
             break;
         case MapType:
-            static_cast<MapIteratorImp*>(m_pImp)->m_Iterator--;
+            static_cast<MapIteratorImp *>(m_pImp)->m_Iterator--;
             break;
         default:
             break;
@@ -766,20 +728,20 @@ namespace Yaml
         return *this;
     }
 
-    bool Iterator::operator == (const Iterator & it)
+    bool Iterator::operator==(const Iterator &it)
     {
-        if(m_Type != it.m_Type)
+        if (m_Type != it.m_Type)
         {
             return false;
         }
 
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            return static_cast<SequenceIteratorImp*>(m_pImp)->m_Iterator == static_cast<SequenceIteratorImp*>(it.m_pImp)->m_Iterator;
+            return static_cast<SequenceIteratorImp *>(m_pImp)->m_Iterator == static_cast<SequenceIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         case MapType:
-            return static_cast<MapIteratorImp*>(m_pImp)->m_Iterator == static_cast<MapIteratorImp*>(it.m_pImp)->m_Iterator;
+            return static_cast<MapIteratorImp *>(m_pImp)->m_Iterator == static_cast<MapIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         default:
             break;
@@ -788,56 +750,52 @@ namespace Yaml
         return false;
     }
 
-    bool Iterator::operator != (const Iterator & it)
+    bool Iterator::operator!=(const Iterator &it)
     {
         return !(*this == it);
     }
 
-
     // Const Iterator class
-    ConstIterator::ConstIterator() :
-        m_Type(None),
-        m_pImp(nullptr)
+    ConstIterator::ConstIterator() : m_Type(None),
+                                     m_pImp(nullptr)
     {
     }
 
     ConstIterator::~ConstIterator()
     {
-        if(m_pImp)
+        if (m_pImp)
         {
-            switch(m_Type)
+            switch (m_Type)
             {
             case SequenceType:
-                delete static_cast<SequenceConstIteratorImp*>(m_pImp);
+                delete static_cast<SequenceConstIteratorImp *>(m_pImp);
                 break;
             case MapType:
-                delete static_cast<MapConstIteratorImp*>(m_pImp);
+                delete static_cast<MapConstIteratorImp *>(m_pImp);
                 break;
             default:
                 break;
             }
-
         }
     }
 
-    ConstIterator::ConstIterator(const ConstIterator & it) :
-        m_Type(None),
-        m_pImp(nullptr)
+    ConstIterator::ConstIterator(const ConstIterator &it) : m_Type(None),
+                                                            m_pImp(nullptr)
     {
         *this = it;
     }
 
-    ConstIterator & ConstIterator::operator = (const ConstIterator & it)
+    ConstIterator &ConstIterator::operator=(const ConstIterator &it)
     {
-        if(m_pImp)
+        if (m_pImp)
         {
-            switch(m_Type)
+            switch (m_Type)
             {
             case SequenceType:
-                delete static_cast<SequenceConstIteratorImp*>(m_pImp);
+                delete static_cast<SequenceConstIteratorImp *>(m_pImp);
                 break;
             case MapType:
-                delete static_cast<MapConstIteratorImp*>(m_pImp);
+                delete static_cast<MapConstIteratorImp *>(m_pImp);
                 break;
             default:
                 break;
@@ -846,19 +804,19 @@ namespace Yaml
             m_Type = None;
         }
 
-        IteratorImp * pNewImp = nullptr;
+        IteratorImp *pNewImp = nullptr;
 
-        switch(it.m_Type)
+        switch (it.m_Type)
         {
         case SequenceType:
             m_Type = SequenceType;
             pNewImp = new SequenceConstIteratorImp;
-            static_cast<SequenceConstIteratorImp*>(pNewImp)->m_Iterator = static_cast<SequenceConstIteratorImp*>(it.m_pImp)->m_Iterator;
+            static_cast<SequenceConstIteratorImp *>(pNewImp)->m_Iterator = static_cast<SequenceConstIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         case MapType:
             m_Type = MapType;
             pNewImp = new MapConstIteratorImp;
-            static_cast<MapConstIteratorImp*>(pNewImp)->m_Iterator = static_cast<MapConstIteratorImp*>(it.m_pImp)->m_Iterator;
+            static_cast<MapConstIteratorImp *>(pNewImp)->m_Iterator = static_cast<MapConstIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         default:
             break;
@@ -868,34 +826,34 @@ namespace Yaml
         return *this;
     }
 
-    std::pair<const std::string &, const Node &> ConstIterator::operator *()
+    std::pair<const std::string &, const Node &> ConstIterator::operator*()
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            return { g_EmptyString, *(static_cast<SequenceConstIteratorImp*>(m_pImp)->m_Iterator->second)};
+            return {g_EmptyString, *(static_cast<SequenceConstIteratorImp *>(m_pImp)->m_Iterator->second)};
             break;
         case MapType:
-            return {static_cast<MapConstIteratorImp*>(m_pImp)->m_Iterator->first,
-                    *(static_cast<MapConstIteratorImp*>(m_pImp)->m_Iterator->second)};
+            return {static_cast<MapConstIteratorImp *>(m_pImp)->m_Iterator->first,
+                    *(static_cast<MapConstIteratorImp *>(m_pImp)->m_Iterator->second)};
             break;
         default:
             break;
         }
 
         g_NoneNode.Clear();
-        return { g_EmptyString, g_NoneNode};
+        return {g_EmptyString, g_NoneNode};
     }
 
-    ConstIterator & ConstIterator::operator ++ (int dummy)
+    ConstIterator &ConstIterator::operator++(int dummy)
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            static_cast<SequenceConstIteratorImp*>(m_pImp)->m_Iterator++;
+            static_cast<SequenceConstIteratorImp *>(m_pImp)->m_Iterator++;
             break;
         case MapType:
-            static_cast<MapConstIteratorImp*>(m_pImp)->m_Iterator++;
+            static_cast<MapConstIteratorImp *>(m_pImp)->m_Iterator++;
             break;
         default:
             break;
@@ -903,15 +861,15 @@ namespace Yaml
         return *this;
     }
 
-    ConstIterator & ConstIterator::operator -- (int dummy)
+    ConstIterator &ConstIterator::operator--(int dummy)
     {
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            static_cast<SequenceConstIteratorImp*>(m_pImp)->m_Iterator--;
+            static_cast<SequenceConstIteratorImp *>(m_pImp)->m_Iterator--;
             break;
         case MapType:
-            static_cast<MapConstIteratorImp*>(m_pImp)->m_Iterator--;
+            static_cast<MapConstIteratorImp *>(m_pImp)->m_Iterator--;
             break;
         default:
             break;
@@ -919,20 +877,20 @@ namespace Yaml
         return *this;
     }
 
-    bool ConstIterator::operator == (const ConstIterator & it)
+    bool ConstIterator::operator==(const ConstIterator &it)
     {
-        if(m_Type != it.m_Type)
+        if (m_Type != it.m_Type)
         {
             return false;
         }
 
-        switch(m_Type)
+        switch (m_Type)
         {
         case SequenceType:
-            return static_cast<SequenceConstIteratorImp*>(m_pImp)->m_Iterator == static_cast<SequenceConstIteratorImp*>(it.m_pImp)->m_Iterator;
+            return static_cast<SequenceConstIteratorImp *>(m_pImp)->m_Iterator == static_cast<SequenceConstIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         case MapType:
-            return static_cast<MapConstIteratorImp*>(m_pImp)->m_Iterator == static_cast<MapConstIteratorImp*>(it.m_pImp)->m_Iterator;
+            return static_cast<MapConstIteratorImp *>(m_pImp)->m_Iterator == static_cast<MapConstIteratorImp *>(it.m_pImp)->m_Iterator;
             break;
         default:
             break;
@@ -941,39 +899,34 @@ namespace Yaml
         return false;
     }
 
-    bool ConstIterator::operator != (const ConstIterator & it)
+    bool ConstIterator::operator!=(const ConstIterator &it)
     {
         return !(*this == it);
     }
 
-
     // Node class
-    Node::Node() :
-        m_pImp(new NodeImp)
+    Node::Node() : m_pImp(new NodeImp)
     {
     }
 
-    Node::Node(const Node & node) :
-        Node()
+    Node::Node(const Node &node) : Node()
     {
         *this = node;
     }
 
-    Node::Node(const std::string & value) :
-        Node()
+    Node::Node(const std::string &value) : Node()
     {
         *this = value;
     }
 
-    Node::Node(const char * value) :
-        Node()
+    Node::Node(const char *value) : Node()
     {
         *this = value;
     }
 
     Node::~Node()
     {
-        delete static_cast<NodeImp*>(m_pImp);
+        delete static_cast<NodeImp *>(m_pImp);
     }
 
     Node::eType Node::Type() const
@@ -1008,7 +961,7 @@ namespace Yaml
 
     size_t Node::Size() const
     {
-        if(TYPE_IMP == nullptr)
+        if (TYPE_IMP == nullptr)
         {
             return 0;
         }
@@ -1016,28 +969,28 @@ namespace Yaml
         return TYPE_IMP->GetSize();
     }
 
-    Node & Node::Insert(const size_t index)
+    Node &Node::Insert(const size_t index)
     {
         NODE_IMP->InitSequence();
         return *TYPE_IMP->Insert(index);
     }
 
-    Node & Node::PushFront()
+    Node &Node::PushFront()
     {
         NODE_IMP->InitSequence();
         return *TYPE_IMP->PushFront();
     }
-    Node & Node::PushBack()
+    Node &Node::PushBack()
     {
         NODE_IMP->InitSequence();
         return *TYPE_IMP->PushBack();
     }
 
-    Node & Node::operator[](const size_t index)
+    Node &Node::operator[](const size_t index)
     {
         NODE_IMP->InitSequence();
-        Node * pNode = TYPE_IMP->GetNode(index);
-        if(pNode == nullptr)
+        Node *pNode = TYPE_IMP->GetNode(index);
+        if (pNode == nullptr)
         {
             g_NoneNode.Clear();
             return g_NoneNode;
@@ -1045,7 +998,7 @@ namespace Yaml
         return *pNode;
     }
 
-    Node & Node::operator[](const std::string & key)
+    Node &Node::operator[](const std::string &key)
     {
         NODE_IMP->InitMap();
         return *TYPE_IMP->GetNode(key);
@@ -1053,7 +1006,7 @@ namespace Yaml
 
     void Node::Erase(const size_t index)
     {
-        if(TYPE_IMP == nullptr || NODE_IMP->m_Type != Node::SequenceType)
+        if (TYPE_IMP == nullptr || NODE_IMP->m_Type != Node::SequenceType)
         {
             return;
         }
@@ -1061,9 +1014,9 @@ namespace Yaml
         return TYPE_IMP->Erase(index);
     }
 
-    void Node::Erase(const std::string & key)
+    void Node::Erase(const std::string &key)
     {
-        if(TYPE_IMP == nullptr || NODE_IMP->m_Type != Node::MapType)
+        if (TYPE_IMP == nullptr || NODE_IMP->m_Type != Node::MapType)
         {
             return;
         }
@@ -1071,21 +1024,21 @@ namespace Yaml
         return TYPE_IMP->Erase(key);
     }
 
-    Node & Node::operator = (const Node & node)
+    Node &Node::operator=(const Node &node)
     {
         NODE_IMP->Clear();
         CopyNode(node, *this);
         return *this;
     }
 
-    Node & Node::operator = (const std::string & value)
+    Node &Node::operator=(const std::string &value)
     {
         NODE_IMP->InitScalar();
         TYPE_IMP->SetData(value);
         return *this;
     }
 
-    Node & Node::operator = (const char * value)
+    Node &Node::operator=(const char *value)
     {
         NODE_IMP->InitScalar();
         TYPE_IMP->SetData(value ? std::string(value) : "");
@@ -1096,21 +1049,21 @@ namespace Yaml
     {
         Iterator it;
 
-        if(TYPE_IMP != nullptr)
+        if (TYPE_IMP != nullptr)
         {
-            IteratorImp * pItImp = nullptr;
+            IteratorImp *pItImp = nullptr;
 
-            switch(NODE_IMP->m_Type)
+            switch (NODE_IMP->m_Type)
             {
             case Node::SequenceType:
                 it.m_Type = Iterator::SequenceType;
                 pItImp = new SequenceIteratorImp;
-                pItImp->InitBegin(static_cast<SequenceImp*>(TYPE_IMP));
+                pItImp->InitBegin(static_cast<SequenceImp *>(TYPE_IMP));
                 break;
             case Node::MapType:
                 it.m_Type = Iterator::MapType;
                 pItImp = new MapIteratorImp;
-                pItImp->InitBegin(static_cast<MapImp*>(TYPE_IMP));
+                pItImp->InitBegin(static_cast<MapImp *>(TYPE_IMP));
                 break;
             default:
                 break;
@@ -1126,21 +1079,21 @@ namespace Yaml
     {
         ConstIterator it;
 
-        if(TYPE_IMP != nullptr)
+        if (TYPE_IMP != nullptr)
         {
-            IteratorImp * pItImp = nullptr;
+            IteratorImp *pItImp = nullptr;
 
-            switch(NODE_IMP->m_Type)
+            switch (NODE_IMP->m_Type)
             {
             case Node::SequenceType:
                 it.m_Type = ConstIterator::SequenceType;
                 pItImp = new SequenceConstIteratorImp;
-                pItImp->InitBegin(static_cast<SequenceImp*>(TYPE_IMP));
+                pItImp->InitBegin(static_cast<SequenceImp *>(TYPE_IMP));
                 break;
             case Node::MapType:
                 it.m_Type = ConstIterator::MapType;
                 pItImp = new MapConstIteratorImp;
-                pItImp->InitBegin(static_cast<MapImp*>(TYPE_IMP));
+                pItImp->InitBegin(static_cast<MapImp *>(TYPE_IMP));
                 break;
             default:
                 break;
@@ -1154,23 +1107,23 @@ namespace Yaml
 
     Iterator Node::End()
     {
-       Iterator it;
+        Iterator it;
 
-        if(TYPE_IMP != nullptr)
+        if (TYPE_IMP != nullptr)
         {
-            IteratorImp * pItImp = nullptr;
+            IteratorImp *pItImp = nullptr;
 
-            switch(NODE_IMP->m_Type)
+            switch (NODE_IMP->m_Type)
             {
             case Node::SequenceType:
                 it.m_Type = Iterator::SequenceType;
                 pItImp = new SequenceIteratorImp;
-                pItImp->InitEnd(static_cast<SequenceImp*>(TYPE_IMP));
+                pItImp->InitEnd(static_cast<SequenceImp *>(TYPE_IMP));
                 break;
             case Node::MapType:
                 it.m_Type = Iterator::MapType;
                 pItImp = new MapIteratorImp;
-                pItImp->InitEnd(static_cast<MapImp*>(TYPE_IMP));
+                pItImp->InitEnd(static_cast<MapImp *>(TYPE_IMP));
                 break;
             default:
                 break;
@@ -1184,23 +1137,23 @@ namespace Yaml
 
     ConstIterator Node::End() const
     {
-       ConstIterator it;
+        ConstIterator it;
 
-        if(TYPE_IMP != nullptr)
+        if (TYPE_IMP != nullptr)
         {
-            IteratorImp * pItImp = nullptr;
+            IteratorImp *pItImp = nullptr;
 
-            switch(NODE_IMP->m_Type)
+            switch (NODE_IMP->m_Type)
             {
             case Node::SequenceType:
                 it.m_Type = ConstIterator::SequenceType;
                 pItImp = new SequenceConstIteratorImp;
-                pItImp->InitEnd(static_cast<SequenceImp*>(TYPE_IMP));
+                pItImp->InitEnd(static_cast<SequenceImp *>(TYPE_IMP));
                 break;
             case Node::MapType:
                 it.m_Type = ConstIterator::MapType;
                 pItImp = new MapConstIteratorImp;
-                pItImp->InitEnd(static_cast<MapImp*>(TYPE_IMP));
+                pItImp->InitEnd(static_cast<MapImp *>(TYPE_IMP));
                 break;
             default:
                 break;
@@ -1212,17 +1165,15 @@ namespace Yaml
         return it;
     }
 
-    const std::string & Node::AsString() const
+    const std::string &Node::AsString() const
     {
-        if(TYPE_IMP == nullptr)
+        if (TYPE_IMP == nullptr)
         {
             return g_EmptyString;
         }
 
         return TYPE_IMP->GetData();
     }
-
-
 
     // Reader implementations
     /**
@@ -1233,30 +1184,28 @@ namespace Yaml
     {
 
     public:
-
         /**
         * @breif Constructor.
         *
         */
-        ReaderLine(const std::string & data = "",
+        ReaderLine(const std::string &data = "",
                    const size_t no = 0,
                    const size_t offset = 0,
                    const Node::eType type = Node::None,
-                   const unsigned char flags = 0) :
-            Data(data),
-            No(no),
-            Offset(offset),
-            Type(type),
-            Flags(flags),
-            NextLine(nullptr)
+                   const unsigned char flags = 0) : Data(data),
+                                                    No(no),
+                                                    Offset(offset),
+                                                    Type(type),
+                                                    Flags(flags),
+                                                    NextLine(nullptr)
         {
         }
 
         enum eFlag
         {
-            LiteralScalarFlag,      ///< Literal scalar type, defined as "|".
-            FoldedScalarFlag,       ///< Folded scalar type, defined as "<".
-            ScalarNewlineFlag       ///< Scalar ends with a newline.
+            LiteralScalarFlag, ///< Literal scalar type, defined as "|".
+            FoldedScalarFlag,  ///< Folded scalar type, defined as "<".
+            ScalarNewlineFlag  ///< Scalar ends with a newline.
         };
 
         /**
@@ -1308,7 +1257,7 @@ namespace Yaml
         * @breif Copy and replace scalar flags from another ReaderLine.
         *
         */
-        void CopyScalarFlags(ReaderLine * from)
+        void CopyScalarFlags(ReaderLine *from)
         {
             if (from == nullptr)
             {
@@ -1321,19 +1270,15 @@ namespace Yaml
 
         static const unsigned char FlagMask[3];
 
-        std::string     Data;       ///< Data of line.
-        size_t          No;         ///< Line number.
-        size_t          Offset;     ///< Offset to first character in data.
-        Node::eType     Type;       ///< Type of line.
-        unsigned char   Flags;      ///< Flags of line.
-        ReaderLine *    NextLine;   ///< Pointer to next line.
-
-
-
+        std::string Data;     ///< Data of line.
+        size_t No;            ///< Line number.
+        size_t Offset;        ///< Offset to first character in data.
+        Node::eType Type;     ///< Type of line.
+        unsigned char Flags;  ///< Flags of line.
+        ReaderLine *NextLine; ///< Pointer to next line.
     };
 
-    const unsigned char ReaderLine::FlagMask[3] = { 0x01, 0x02, 0x04 };
-
+    const unsigned char ReaderLine::FlagMask[3] = {0x01, 0x02, 0x04};
 
     /**
     * @breif Implementation class of Yaml parsing.
@@ -1344,7 +1289,6 @@ namespace Yaml
     {
 
     public:
-
         /**
         * @breif Default constructor.
         *
@@ -1366,7 +1310,7 @@ namespace Yaml
         * @breif Run full parsing procedure.
         *
         */
-        void Parse(Node & root, std::iostream & stream)
+        void Parse(Node &root, std::iostream &stream)
         {
             try
             {
@@ -1376,7 +1320,7 @@ namespace Yaml
                 //Print();
                 ParseRoot(root);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 root.Clear();
                 throw;
@@ -1384,14 +1328,12 @@ namespace Yaml
         }
 
     private:
-
         /**
         * @breif Copy constructor.
         *
         */
-        ParseImp(const ParseImp & copy)
+        ParseImp(const ParseImp &copy)
         {
-
         }
 
         /**
@@ -1402,13 +1344,13 @@ namespace Yaml
         *           - Document start/end.
         *
         */
-        void ReadLines(std::iostream & stream)
+        void ReadLines(std::iostream &stream)
         {
-            std::string     line = "";
-            size_t          lineNo = 0;
-            bool            documentStartFound = false;
-            bool            foundFirstNotEmpty = false;
-            std::streampos  streamPos = 0;
+            std::string line = "";
+            size_t lineNo = 0;
+            bool documentStartFound = false;
+            bool foundFirstNotEmpty = false;
+            std::streampos streamPos = 0;
 
             // Read all lines, as long as the stream is ok.
             while (!stream.eof() && !stream.fail())
@@ -1420,7 +1362,7 @@ namespace Yaml
 
                 // Remove comment
                 const size_t commentPos = FindNotCited(line, '#');
-                if(commentPos != std::string::npos)
+                if (commentPos != std::string::npos)
                 {
                     line.resize(commentPos);
                 }
@@ -1439,7 +1381,7 @@ namespace Yaml
                 {
                     break;
                 }
-                else if(line == "---")
+                else if (line == "---")
                 {
                     stream.seekg(streamPos);
                     break;
@@ -1464,13 +1406,13 @@ namespace Yaml
                 }
 
                 // Validate tabs
-                const size_t firstTabPos    = line.find_first_of('\t');
-                size_t       startOffset    = line.find_first_not_of(" \t");
+                const size_t firstTabPos = line.find_first_of('\t');
+                size_t startOffset = line.find_first_not_of(" \t");
 
                 // Make sure no tabs are in the very front.
                 if (startOffset != std::string::npos)
                 {
-                    if(firstTabPos < startOffset)
+                    if (firstTabPos < startOffset)
                     {
                         throw ParsingException(ExceptionMessage(g_ErrorTabInOffset, lineNo, firstTabPos));
                     }
@@ -1485,9 +1427,9 @@ namespace Yaml
                 }
 
                 // Add line.
-                if(foundFirstNotEmpty == false)
+                if (foundFirstNotEmpty == false)
                 {
-                    if(line.size())
+                    if (line.size())
                     {
                         foundFirstNotEmpty = true;
                     }
@@ -1497,7 +1439,7 @@ namespace Yaml
                     }
                 }
 
-                ReaderLine * pLine = new ReaderLine(line, lineNo, startOffset);
+                ReaderLine *pLine = new ReaderLine(line, lineNo, startOffset);
                 m_Lines.push_back(pLine);
             }
         }
@@ -1558,9 +1500,9 @@ namespace Yaml
         * @return true if line is sequence, else false.
         *
         */
-        bool PostProcessSequenceLine(std::list<ReaderLine *>::iterator & it)
+        bool PostProcessSequenceLine(std::list<ReaderLine *>::iterator &it)
         {
-            ReaderLine * pLine = *it;
+            ReaderLine *pLine = *it;
 
             // Sequence split
             if (IsSequenceStart(pLine->Data) == false)
@@ -1593,9 +1535,9 @@ namespace Yaml
         * @return true if line is mapping, else move on to scalar parsing.
         *
         */
-        bool PostProcessMappingLine(std::list<ReaderLine *>::iterator & it)
+        bool PostProcessMappingLine(std::list<ReaderLine *>::iterator &it)
         {
-            ReaderLine * pLine = *it;
+            ReaderLine *pLine = *it;
 
             // Find map key.
             size_t preKeyQuotes = 0;
@@ -1604,7 +1546,7 @@ namespace Yaml
             {
                 return false;
             }
-            if(preKeyQuotes > 1)
+            if (preKeyQuotes > 1)
             {
                 throw ParsingException(ExceptionMessage(g_ErrorKeyIncorrect, *pLine));
             }
@@ -1621,9 +1563,9 @@ namespace Yaml
             key.resize(keyEnd + 1);
 
             // Handle cited key.
-            if(preKeyQuotes == 1)
+            if (preKeyQuotes == 1)
             {
-                if(key.front() != '"' || key.back() != '"')
+                if (key.front() != '"' || key.back() != '"')
                 {
                     throw ParsingException(ExceptionMessage(g_ErrorKeyIncorrect, *pLine));
                 }
@@ -1652,15 +1594,14 @@ namespace Yaml
 
             pLine->Data = key;
 
-
             // Remove all empty lines after map key.
             ClearTrailingEmptyLines(++it);
 
             // Add new empty line?
             size_t newLineOffset = valueStart;
-            if(newLineOffset == std::string::npos)
+            if (newLineOffset == std::string::npos)
             {
-                if(it != m_Lines.end() && (*it)->Offset > pLine->Offset)
+                if (it != m_Lines.end() && (*it)->Offset > pLine->Offset)
                 {
                     return true;
                 }
@@ -1674,11 +1615,11 @@ namespace Yaml
 
             // Add new line with value.
             unsigned char dummyBlockFlags = 0;
-            if(IsBlockScalar(value, pLine->No, dummyBlockFlags) == true)
+            if (IsBlockScalar(value, pLine->No, dummyBlockFlags) == true)
             {
                 newLineOffset = pLine->Offset;
             }
-            ReaderLine * pNewLine = new ReaderLine(value, pLine->No, newLineOffset, Node::ScalarType);
+            ReaderLine *pNewLine = new ReaderLine(value, pLine->No, newLineOffset, Node::ScalarType);
             it = m_Lines.insert(it, pNewLine);
 
             // Return false in order to handle next line(scalar value).
@@ -1692,29 +1633,29 @@ namespace Yaml
         * @return true if scalar search should continue, else false.
         *
         */
-        void PostProcessScalarLine(std::list<ReaderLine *>::iterator & it)
+        void PostProcessScalarLine(std::list<ReaderLine *>::iterator &it)
         {
-            ReaderLine * pLine = *it;
+            ReaderLine *pLine = *it;
             pLine->Type = Node::ScalarType;
 
             size_t parentOffset = pLine->Offset;
-            if(pLine != m_Lines.front())
+            if (pLine != m_Lines.front())
             {
-                 std::list<ReaderLine *>::iterator lastIt = it;
+                std::list<ReaderLine *>::iterator lastIt = it;
                 --lastIt;
                 parentOffset = (*lastIt)->Offset;
             }
 
-           std::list<ReaderLine *>::iterator lastNotEmpty = it++;
+            std::list<ReaderLine *>::iterator lastNotEmpty = it++;
 
             // Find last empty lines
-            while(it != m_Lines.end())
+            while (it != m_Lines.end())
             {
                 pLine = *it;
                 pLine->Type = Node::ScalarType;
-                if(pLine->Data.size())
+                if (pLine->Data.size())
                 {
-                    if(pLine->Offset <= parentOffset)
+                    if (pLine->Offset <= parentOffset)
                     {
                         break;
                     }
@@ -1733,19 +1674,19 @@ namespace Yaml
         * @breif Process root node and start of document.
         *
         */
-        void ParseRoot(Node & root)
+        void ParseRoot(Node &root)
         {
             // Get first line and start type.
             auto it = m_Lines.begin();
-            if(it == m_Lines.end())
+            if (it == m_Lines.end())
             {
                 return;
             }
             Node::eType type = (*it)->Type;
-            ReaderLine * pLine = *it;
+            ReaderLine *pLine = *it;
 
             // Handle next line.
-            switch(type)
+            switch (type)
             {
             case Node::SequenceType:
                 ParseSequence(root, it);
@@ -1760,35 +1701,34 @@ namespace Yaml
                 break;
             }
 
-            if(it != m_Lines.end())
+            if (it != m_Lines.end())
             {
                 throw InternalException(ExceptionMessage(g_ErrorUnexpectedDocumentEnd, *pLine));
             }
-
         }
 
         /**
         * @breif Process sequence node.
         *
         */
-        void ParseSequence(Node & node, std::list<ReaderLine *>::iterator & it)
+        void ParseSequence(Node &node, std::list<ReaderLine *>::iterator &it)
         {
-            ReaderLine * pNextLine = nullptr;
-            while(it != m_Lines.end())
+            ReaderLine *pNextLine = nullptr;
+            while (it != m_Lines.end())
             {
-                ReaderLine * pLine = *it;
-                Node & childNode = node.PushBack();
+                ReaderLine *pLine = *it;
+                Node &childNode = node.PushBack();
 
                 // Move to next line, error check.
                 ++it;
-                if(it == m_Lines.end())
+                if (it == m_Lines.end())
                 {
                     throw InternalException(ExceptionMessage(g_ErrorUnexpectedDocumentEnd, *pLine));
                 }
 
                 // Handle value of map
                 Node::eType valueType = (*it)->Type;
-                switch(valueType)
+                switch (valueType)
                 {
                 case Node::SequenceType:
                     ParseSequence(childNode, it);
@@ -1805,19 +1745,18 @@ namespace Yaml
 
                 // Check next line. if sequence and correct level, go on, else exit.
                 // If same level but but of type map = error.
-                if(it == m_Lines.end() || ((pNextLine = *it)->Offset < pLine->Offset))
+                if (it == m_Lines.end() || ((pNextLine = *it)->Offset < pLine->Offset))
                 {
                     break;
                 }
-                if(pNextLine->Offset > pLine->Offset)
+                if (pNextLine->Offset > pLine->Offset)
                 {
                     throw ParsingException(ExceptionMessage(g_ErrorIncorrectOffset, *pNextLine));
                 }
-                if(pNextLine->Type != Node::SequenceType)
+                if (pNextLine->Type != Node::SequenceType)
                 {
                     throw InternalException(ExceptionMessage(g_ErrorDiffEntryNotAllowed, *pNextLine));
                 }
-
             }
         }
 
@@ -1825,24 +1764,24 @@ namespace Yaml
         * @breif Process map node.
         *
         */
-        void ParseMap(Node & node, std::list<ReaderLine *>::iterator & it)
+        void ParseMap(Node &node, std::list<ReaderLine *>::iterator &it)
         {
-            ReaderLine * pNextLine = nullptr;
-            while(it != m_Lines.end())
+            ReaderLine *pNextLine = nullptr;
+            while (it != m_Lines.end())
             {
-                ReaderLine * pLine = *it;
-                Node & childNode = node[pLine->Data];
+                ReaderLine *pLine = *it;
+                Node &childNode = node[pLine->Data];
 
                 // Move to next line, error check.
                 ++it;
-                if(it == m_Lines.end())
+                if (it == m_Lines.end())
                 {
                     throw InternalException(ExceptionMessage(g_ErrorUnexpectedDocumentEnd, *pLine));
                 }
 
                 // Handle value of map
                 Node::eType valueType = (*it)->Type;
-                switch(valueType)
+                switch (valueType)
                 {
                 case Node::SequenceType:
                     ParseSequence(childNode, it);
@@ -1859,19 +1798,18 @@ namespace Yaml
 
                 // Check next line. if map and correct level, go on, else exit.
                 // if same level but but of type map = error.
-                if(it == m_Lines.end() || ((pNextLine = *it)->Offset < pLine->Offset))
+                if (it == m_Lines.end() || ((pNextLine = *it)->Offset < pLine->Offset))
                 {
                     break;
                 }
-                if(pNextLine->Offset > pLine->Offset)
+                if (pNextLine->Offset > pLine->Offset)
                 {
                     throw ParsingException(ExceptionMessage(g_ErrorIncorrectOffset, *pNextLine));
                 }
-                if(pNextLine->Type != pLine->Type)
+                if (pNextLine->Type != pLine->Type)
                 {
                     throw InternalException(ExceptionMessage(g_ErrorDiffEntryNotAllowed, *pNextLine));
                 }
-
             }
         }
 
@@ -1879,11 +1817,11 @@ namespace Yaml
         * @breif Process scalar node.
         *
         */
-        void ParseScalar(Node & node, std::list<ReaderLine *>::iterator & it)
+        void ParseScalar(Node &node, std::list<ReaderLine *>::iterator &it)
         {
             std::string data = "";
-            ReaderLine * pFirstLine = *it;
-            ReaderLine * pLine = *it;
+            ReaderLine *pFirstLine = *it;
+            ReaderLine *pLine = *it;
 
             // Check if current line is a block scalar.
             unsigned char blockFlags = 0;
@@ -1894,7 +1832,7 @@ namespace Yaml
             size_t parentOffset = 0;
 
             // Find parent offset
-            if(it != m_Lines.begin())
+            if (it != m_Lines.begin())
             {
                 std::list<ReaderLine *>::iterator parentIt = it;
                 --parentIt;
@@ -1902,29 +1840,29 @@ namespace Yaml
             }
 
             // Move to next iterator/line if current line is a block scalar.
-            if(isBlockScalar)
+            if (isBlockScalar)
             {
                 ++it;
-                if(it == m_Lines.end() || (pLine = *it)->Type != Node::ScalarType)
+                if (it == m_Lines.end() || (pLine = *it)->Type != Node::ScalarType)
                 {
                     return;
                 }
             }
 
             // Not a block scalar, cut end spaces/tabs
-            if(isBlockScalar == false)
+            if (isBlockScalar == false)
             {
-                while(1)
+                while (1)
                 {
                     pLine = *it;
 
-                    if(parentOffset != 0 && pLine->Offset <= parentOffset)
+                    if (parentOffset != 0 && pLine->Offset <= parentOffset)
                     {
                         throw ParsingException(ExceptionMessage(g_ErrorIncorrectOffset, *pLine));
                     }
 
                     const size_t endOffset = pLine->Data.find_last_not_of(" \t");
-                    if(endOffset == std::string::npos)
+                    if (endOffset == std::string::npos)
                     {
                         data += "\n";
                     }
@@ -1935,7 +1873,7 @@ namespace Yaml
 
                     // Move to next line
                     ++it;
-                    if(it == m_Lines.end() || (*it)->Type != Node::ScalarType)
+                    if (it == m_Lines.end() || (*it)->Type != Node::ScalarType)
                     {
                         break;
                     }
@@ -1943,7 +1881,7 @@ namespace Yaml
                     data += " ";
                 }
 
-                if(ValidateQuote(data) == false)
+                if (ValidateQuote(data) == false)
                 {
                     throw ParsingException(ExceptionMessage(g_ErrorInvalidQuote, *pFirstLine));
                 }
@@ -1953,25 +1891,25 @@ namespace Yaml
             {
                 pLine = *it;
                 size_t blockOffset = pLine->Offset;
-                if(blockOffset <= parentOffset)
+                if (blockOffset <= parentOffset)
                 {
                     throw ParsingException(ExceptionMessage(g_ErrorIncorrectOffset, *pLine));
                 }
 
                 bool addedSpace = false;
-                while(it != m_Lines.end() && (*it)->Type == Node::ScalarType)
+                while (it != m_Lines.end() && (*it)->Type == Node::ScalarType)
                 {
                     pLine = *it;
 
                     const size_t endOffset = pLine->Data.find_last_not_of(" \t");
-                    if(endOffset != std::string::npos && pLine->Offset < blockOffset)
+                    if (endOffset != std::string::npos && pLine->Offset < blockOffset)
                     {
                         throw ParsingException(ExceptionMessage(g_ErrorIncorrectOffset, *pLine));
                     }
 
-                    if(endOffset == std::string::npos)
+                    if (endOffset == std::string::npos)
                     {
-                        if(addedSpace)
+                        if (addedSpace)
                         {
                             data[data.size() - 1] = '\n';
                             addedSpace = false;
@@ -1986,9 +1924,9 @@ namespace Yaml
                     }
                     else
                     {
-                        if(blockOffset != pLine->Offset && foldedFlag)
+                        if (blockOffset != pLine->Offset && foldedFlag)
                         {
-                            if(addedSpace)
+                            if (addedSpace)
                             {
                                 data[data.size() - 1] = '\n';
                                 addedSpace = false;
@@ -2004,30 +1942,30 @@ namespace Yaml
 
                     // Move to next line
                     ++it;
-                    if(it == m_Lines.end() || (*it)->Type != Node::ScalarType)
+                    if (it == m_Lines.end() || (*it)->Type != Node::ScalarType)
                     {
-                        if(newLineFlag)
+                        if (newLineFlag)
                         {
                             data += "\n";
                         }
                         break;
                     }
 
-                    if(foldedFlag)
+                    if (foldedFlag)
                     {
                         data += " ";
                         addedSpace = true;
                     }
-                    else if(literalFlag && endOffset != std::string::npos)
+                    else if (literalFlag && endOffset != std::string::npos)
                     {
                         data += "\n";
                     }
                 }
             }
 
-            if(data.size() && (data[0] == '"' || data[0] == '\''))
+            if (data.size() && (data[0] == '"' || data[0] == '\''))
             {
-                data = data.substr(1, data.size() - 2 );
+                data = data.substr(1, data.size() - 2);
             }
 
             node = data;
@@ -2042,7 +1980,7 @@ namespace Yaml
             for (auto it = m_Lines.begin(); it != m_Lines.end(); it++)
             {
 
-                ReaderLine * pLine = *it;
+                ReaderLine *pLine = *it;
 
                 // Print type
                 if (pLine->Type == Node::SequenceType)
@@ -2096,7 +2034,6 @@ namespace Yaml
                     std::cout << "-";
                 }
 
-
                 std::cout << "| ";
                 std::cout << pLine->No << " ";
                 std::cout << std::string(pLine->Offset, ' ');
@@ -2139,12 +2076,12 @@ namespace Yaml
             m_Lines.clear();
         }
 
-        void ClearTrailingEmptyLines(std::list<ReaderLine *>::iterator & it)
+        void ClearTrailingEmptyLines(std::list<ReaderLine *>::iterator &it)
         {
-            while(it != m_Lines.end())
+            while (it != m_Lines.end())
             {
-                ReaderLine * pLine = *it;
-                if(pLine->Data.size() == 0)
+                ReaderLine *pLine = *it;
+                if (pLine->Data.size() == 0)
                 {
                     delete *it;
                     it = m_Lines.erase(it);
@@ -2153,11 +2090,10 @@ namespace Yaml
                 {
                     return;
                 }
-
             }
         }
 
-        static bool IsSequenceStart(const std::string & data)
+        static bool IsSequenceStart(const std::string &data)
         {
             if (data.size() == 0 || data[0] != '-')
             {
@@ -2172,19 +2108,19 @@ namespace Yaml
             return true;
         }
 
-        static bool IsBlockScalar(const std::string & data, const size_t line, unsigned char & flags)
+        static bool IsBlockScalar(const std::string &data, const size_t line, unsigned char &flags)
         {
             flags = 0;
-            if(data.size() == 0)
+            if (data.size() == 0)
             {
                 return false;
             }
 
-            if(data[0] == '|')
+            if (data[0] == '|')
             {
-                if(data.size() >= 2)
+                if (data.size() >= 2)
                 {
-                    if(data[1] != '-' && data[1] != ' ' && data[1] != '\t')
+                    if (data[1] != '-' && data[1] != ' ' && data[1] != '\t')
                     {
                         throw ParsingException(ExceptionMessage(g_ErrorInvalidBlockScalar, line, data));
                     }
@@ -2197,11 +2133,11 @@ namespace Yaml
                 return true;
             }
 
-            if(data[0] == '>')
+            if (data[0] == '>')
             {
-                if(data.size() >= 2)
+                if (data.size() >= 2)
                 {
-                    if(data[1] != '-' && data[1] != ' ' && data[1] != '\t')
+                    if (data[1] != '-' && data[1] != ' ' && data[1] != '\t')
                     {
                         throw ParsingException(ExceptionMessage(g_ErrorInvalidBlockScalar, line, data));
                     }
@@ -2217,12 +2153,11 @@ namespace Yaml
             return false;
         }
 
-        std::list<ReaderLine *> m_Lines;    ///< List of lines.
-
+        std::list<ReaderLine *> m_Lines; ///< List of lines.
     };
 
     // Parsing functions
-    void Parse(Node & root, const char * filename)
+    void Parse(Node &root, const char *filename)
     {
         std::ifstream f(filename, std::ifstream::binary);
         if (f.is_open() == false)
@@ -2241,9 +2176,9 @@ namespace Yaml
         Parse(root, data.get(), fileSize);
     }
 
-    void Parse(Node & root, std::iostream & stream)
+    void Parse(Node &root, std::iostream &stream)
     {
-        ParseImp * pImp = nullptr;
+        ParseImp *pImp = nullptr;
 
         try
         {
@@ -2258,34 +2193,31 @@ namespace Yaml
         }
     }
 
-    void Parse(Node & root, const std::string & string)
+    void Parse(Node &root, const std::string &string)
     {
         std::stringstream ss(string);
         Parse(root, ss);
     }
 
-    void Parse(Node & root, const char * buffer, const size_t size)
+    void Parse(Node &root, const char *buffer, const size_t size)
     {
         std::stringstream ss(std::string(buffer, size));
         Parse(root, ss);
     }
 
-
     // Serialize configuration structure.
     SerializeConfig::SerializeConfig(const size_t spaceIndentation,
                                      const size_t scalarMaxLength,
                                      const bool sequenceMapNewline,
-                                     const bool mapScalarNewline) :
-        SpaceIndentation(spaceIndentation),
-        ScalarMaxLength(scalarMaxLength),
-        SequenceMapNewline(sequenceMapNewline),
-        MapScalarNewline(mapScalarNewline)
+                                     const bool mapScalarNewline) : SpaceIndentation(spaceIndentation),
+                                                                    ScalarMaxLength(scalarMaxLength),
+                                                                    SequenceMapNewline(sequenceMapNewline),
+                                                                    MapScalarNewline(mapScalarNewline)
     {
     }
 
-
     // Serialization functions
-    void Serialize(const Node & root, const char * filename, const SerializeConfig & config)
+    void Serialize(const Node &root, const char *filename, const SerializeConfig &config)
     {
         std::stringstream stream;
         Serialize(root, stream, config);
@@ -2300,10 +2232,10 @@ namespace Yaml
         f.close();
     }
 
-    size_t LineFolding(const std::string & input, std::vector<std::string> & folded, const size_t maxLength)
+    size_t LineFolding(const std::string &input, std::vector<std::string> &folded, const size_t maxLength)
     {
         folded.clear();
-        if(input.size() == 0)
+        if (input.size() == 0)
         {
             return 0;
         }
@@ -2311,19 +2243,19 @@ namespace Yaml
         size_t currentPos = 0;
         size_t lastPos = 0;
         size_t spacePos = std::string::npos;
-        while(currentPos < input.size())
+        while (currentPos < input.size())
         {
             currentPos = lastPos + maxLength;
 
-            if(currentPos < input.size())
+            if (currentPos < input.size())
             {
-               spacePos = input.find_first_of(' ', currentPos);
+                spacePos = input.find_first_of(' ', currentPos);
             }
 
-            if(spacePos == std::string::npos || currentPos >= input.size())
+            if (spacePos == std::string::npos || currentPos >= input.size())
             {
                 const std::string endLine = input.substr(lastPos);
-                if(endLine.size())
+                if (endLine.size())
                 {
                     folded.push_back(endLine);
                 }
@@ -2339,159 +2271,156 @@ namespace Yaml
         return folded.size();
     }
 
-    static void SerializeLoop(const Node & node, std::iostream & stream, bool useLevel, const size_t level, const SerializeConfig & config)
+    static void SerializeLoop(const Node &node, std::iostream &stream, bool useLevel, const size_t level, const SerializeConfig &config)
     {
         const size_t indention = config.SpaceIndentation;
 
-        switch(node.Type())
+        switch (node.Type())
         {
-            case Node::SequenceType:
+        case Node::SequenceType:
+        {
+            for (auto it = node.Begin(); it != node.End(); it++)
             {
-                for(auto it = node.Begin(); it != node.End(); it++)
+                const Node &value = (*it).second;
+                if (value.IsNone())
                 {
-                    const Node & value = (*it).second;
-                    if(value.IsNone())
-                    {
-                        continue;
-                    }
-                    stream << std::string(level, ' ') << "- ";
-                    useLevel = false;
-                    if(value.IsSequence() || (value.IsMap() && config.SequenceMapNewline == true))
-                    {
-                        useLevel = true;
-                        stream << "\n";
-                    }
-
-                    SerializeLoop(value, stream, useLevel, level + 2, config);
+                    continue;
                 }
-
-            }
-            break;
-            case Node::MapType:
-            {
-                size_t count = 0;
-                for(auto it = node.Begin(); it != node.End(); it++)
+                stream << std::string(level, ' ') << "- ";
+                useLevel = false;
+                if (value.IsSequence() || (value.IsMap() && config.SequenceMapNewline == true))
                 {
-                    const Node & value = (*it).second;
-                    if(value.IsNone())
-                    {
-                        continue;
-                    }
-
-                    if(useLevel || count > 0)
-                    {
-                       stream << std::string(level, ' ');
-                    }
-
-                    std::string key = (*it).first;
-                    AddEscapeTokens(key, "\\\"");
-                    if(ShouldBeCited(key))
-                    {
-                        stream << "\"" << key << "\"" << ": ";
-                    }
-                    else
-                    {
-                        stream << key << ": ";
-                    }
-
-
-                    useLevel = false;
-                    if(value.IsScalar() == false || (value.IsScalar() && config.MapScalarNewline))
-                    {
-                        useLevel = true;
-                        stream << "\n";
-                    }
-
-                    SerializeLoop(value, stream, useLevel, level + indention, config);
-
                     useLevel = true;
-                    count++;
-                }
-
-            }
-            break;
-            case Node::ScalarType:
-            {
-                const std::string value = node.As<std::string>();
-
-                // Empty scalar
-                if(value.size() == 0)
-                {
                     stream << "\n";
-                    break;
                 }
 
-                // Get lines of scalar.
-                std::string line = "";
-                std::vector<std::string> lines;
-                std::istringstream iss(value);
-                while (iss.eof() == false)
+                SerializeLoop(value, stream, useLevel, level + 2, config);
+            }
+        }
+        break;
+        case Node::MapType:
+        {
+            size_t count = 0;
+            for (auto it = node.Begin(); it != node.End(); it++)
+            {
+                const Node &value = (*it).second;
+                if (value.IsNone())
                 {
-                    std::getline(iss, line);
-                    lines.push_back(line);
+                    continue;
                 }
 
-                // Block scalar
-                const std::string & lastLine = lines.back();
-                const bool endNewline = lastLine.size() == 0;
-                if(endNewline)
+                if (useLevel || count > 0)
                 {
-                    lines.pop_back();
+                    stream << std::string(level, ' ');
                 }
 
-                // Literal
-                if(lines.size() > 1)
+                std::string key = (*it).first;
+                AddEscapeTokens(key, "\\\"");
+                if (ShouldBeCited(key))
                 {
-                    stream << "|";
+                    stream << "\"" << key << "\""
+                           << ": ";
                 }
-                // Folded/plain
                 else
                 {
-                    const std::string frontLine = lines.front();
-                    if(config.ScalarMaxLength == 0 || lines.front().size() <= config.ScalarMaxLength ||
-                       LineFolding(frontLine, lines, config.ScalarMaxLength) == 1)
-                    {
-                        if(useLevel)
-                        {
-                             stream << std::string(level, ' ');
-                        }
+                    stream << key << ": ";
+                }
 
-                        if(ShouldBeCited(value))
-                        {
-                            stream << "\"" << value << "\"\n";
-                            break;
-                        }
-                        stream << value << "\n";
+                useLevel = false;
+                if (value.IsScalar() == false || (value.IsScalar() && config.MapScalarNewline))
+                {
+                    useLevel = true;
+                    stream << "\n";
+                }
+
+                SerializeLoop(value, stream, useLevel, level + indention, config);
+
+                useLevel = true;
+                count++;
+            }
+        }
+        break;
+        case Node::ScalarType:
+        {
+            const std::string value = node.As<std::string>();
+
+            // Empty scalar
+            if (value.size() == 0)
+            {
+                stream << "\n";
+                break;
+            }
+
+            // Get lines of scalar.
+            std::string line = "";
+            std::vector<std::string> lines;
+            std::istringstream iss(value);
+            while (iss.eof() == false)
+            {
+                std::getline(iss, line);
+                lines.push_back(line);
+            }
+
+            // Block scalar
+            const std::string &lastLine = lines.back();
+            const bool endNewline = lastLine.size() == 0;
+            if (endNewline)
+            {
+                lines.pop_back();
+            }
+
+            // Literal
+            if (lines.size() > 1)
+            {
+                stream << "|";
+            }
+            // Folded/plain
+            else
+            {
+                const std::string frontLine = lines.front();
+                if (config.ScalarMaxLength == 0 || lines.front().size() <= config.ScalarMaxLength ||
+                    LineFolding(frontLine, lines, config.ScalarMaxLength) == 1)
+                {
+                    if (useLevel)
+                    {
+                        stream << std::string(level, ' ');
+                    }
+
+                    if (ShouldBeCited(value))
+                    {
+                        stream << "\"" << value << "\"\n";
                         break;
                     }
-                    else
-                    {
-                        stream << ">";
-                    }
+                    stream << value << "\n";
+                    break;
                 }
-
-                if(endNewline == false)
+                else
                 {
-                     stream << "-";
-                }
-                stream << "\n";
-
-
-                for(auto it = lines.begin(); it != lines.end(); it++)
-                {
-                    stream << std::string(level, ' ') << (*it) << "\n";
+                    stream << ">";
                 }
             }
-            break;
+
+            if (endNewline == false)
+            {
+                stream << "-";
+            }
+            stream << "\n";
+
+            for (auto it = lines.begin(); it != lines.end(); it++)
+            {
+                stream << std::string(level, ' ') << (*it) << "\n";
+            }
+        }
+        break;
 
         default:
             break;
         }
     }
 
-    void Serialize(const Node & root, std::iostream & stream, const SerializeConfig & config)
+    void Serialize(const Node &root, std::iostream &stream, const SerializeConfig &config)
     {
-        if(config.SpaceIndentation < 2)
+        if (config.SpaceIndentation < 2)
         {
             throw OperationException(g_ErrorIndentation);
         }
@@ -2499,56 +2428,54 @@ namespace Yaml
         SerializeLoop(root, stream, false, 0, config);
     }
 
-    void Serialize(const Node & root, std::string & string, const SerializeConfig & config)
+    void Serialize(const Node &root, std::string &string, const SerializeConfig &config)
     {
         std::stringstream stream;
         Serialize(root, stream, config);
         string = stream.str();
     }
 
-
-
     // Static function implementations
-    std::string ExceptionMessage(const std::string & message, ReaderLine & line)
+    std::string ExceptionMessage(const std::string &message, ReaderLine &line)
     {
         return message + std::string(" Line ") + std::to_string(line.No) + std::string(": ") + line.Data;
     }
 
-    std::string ExceptionMessage(const std::string & message, ReaderLine & line, const size_t errorPos)
+    std::string ExceptionMessage(const std::string &message, ReaderLine &line, const size_t errorPos)
     {
         return message + std::string(" Line ") + std::to_string(line.No) + std::string(" column ") + std::to_string(errorPos + 1) + std::string(": ") + line.Data;
     }
 
-    std::string ExceptionMessage(const std::string & message, const size_t errorLine, const size_t errorPos)
+    std::string ExceptionMessage(const std::string &message, const size_t errorLine, const size_t errorPos)
     {
         return message + std::string(" Line ") + std::to_string(errorLine) + std::string(" column ") + std::to_string(errorPos);
     }
 
-    std::string ExceptionMessage(const std::string & message, const size_t errorLine, const std::string & data)
+    std::string ExceptionMessage(const std::string &message, const size_t errorLine, const std::string &data)
     {
         return message + std::string(" Line ") + std::to_string(errorLine) + std::string(": ") + data;
     }
 
-    bool FindQuote(const std::string & input, size_t & start, size_t & end, size_t searchPos)
+    bool FindQuote(const std::string &input, size_t &start, size_t &end, size_t searchPos)
     {
         start = end = std::string::npos;
         size_t qPos = searchPos;
         bool foundStart = false;
 
-        while(qPos != std::string::npos)
+        while (qPos != std::string::npos)
         {
             // Find first quote.
             qPos = input.find_first_of("\"'", qPos);
-            if(qPos == std::string::npos)
+            if (qPos == std::string::npos)
             {
                 return false;
             }
 
             const char token = input[qPos];
-            if(token == '"' && (qPos == 0 || input[qPos-1] != '\\'))
+            if (token == '"' && (qPos == 0 || input[qPos - 1] != '\\'))
             {
                 // Found start quote.
-                if(foundStart == false)
+                if (foundStart == false)
                 {
                     start = qPos;
                     foundStart = true;
@@ -2562,7 +2489,7 @@ namespace Yaml
             }
 
             // Check if it's possible for another loop.
-            if(qPos + 1 == input.size())
+            if (qPos + 1 == input.size())
             {
                 return false;
             }
@@ -2572,11 +2499,11 @@ namespace Yaml
         return false;
     }
 
-    size_t FindNotCited(const std::string & input, char token, size_t & preQuoteCount)
+    size_t FindNotCited(const std::string &input, char token, size_t &preQuoteCount)
     {
         preQuoteCount = 0;
         size_t tokenPos = input.find_first_of(token);
-        if(tokenPos == std::string::npos)
+        if (tokenPos == std::string::npos)
         {
             return std::string::npos;
         }
@@ -2586,18 +2513,18 @@ namespace Yaml
 
         size_t quoteStart = 0;
         size_t quoteEnd = 0;
-        while(FindQuote(input, quoteStart, quoteEnd, quoteEnd))
+        while (FindQuote(input, quoteStart, quoteEnd, quoteEnd))
         {
             quotes.push_back({quoteStart, quoteEnd});
 
-            if(quoteEnd + 1 == input.size())
+            if (quoteEnd + 1 == input.size())
             {
                 break;
             }
             quoteEnd++;
         }
 
-        if(quotes.size() == 0)
+        if (quotes.size() == 0)
         {
             return tokenPos;
         }
@@ -2605,24 +2532,24 @@ namespace Yaml
         size_t currentQuoteIndex = 0;
         std::pair<size_t, size_t> currentQuote = {0, 0};
 
-        while(currentQuoteIndex < quotes.size())
+        while (currentQuoteIndex < quotes.size())
         {
             currentQuote = quotes[currentQuoteIndex];
 
-            if(tokenPos < currentQuote.first)
+            if (tokenPos < currentQuote.first)
             {
                 return tokenPos;
             }
             preQuoteCount++;
-            if(tokenPos <= currentQuote.second)
+            if (tokenPos <= currentQuote.second)
             {
                 // Find next token
-                if(tokenPos + 1 == input.size())
+                if (tokenPos + 1 == input.size())
                 {
                     return std::string::npos;
                 }
                 tokenPos = input.find_first_of(token, tokenPos + 1);
-                if(tokenPos == std::string::npos)
+                if (tokenPos == std::string::npos)
                 {
                     return std::string::npos;
                 }
@@ -2634,24 +2561,24 @@ namespace Yaml
         return tokenPos;
     }
 
-    size_t FindNotCited(const std::string & input, char token)
+    size_t FindNotCited(const std::string &input, char token)
     {
         size_t dummy = 0;
         return FindNotCited(input, token, dummy);
     }
 
-    bool ValidateQuote(const std::string & input)
+    bool ValidateQuote(const std::string &input)
     {
-        if(input.size() == 0)
+        if (input.size() == 0)
         {
             return true;
         }
 
         char token = 0;
         size_t searchPos = 0;
-        if(input[0] == '\"' || input[0] == '\'')
+        if (input[0] == '\"' || input[0] == '\'')
         {
-            if(input.size() == 1)
+            if (input.size() == 1)
             {
                 return false;
             }
@@ -2659,26 +2586,26 @@ namespace Yaml
             searchPos = 1;
         }
 
-        while(searchPos != std::string::npos && searchPos < input.size() - 1)
+        while (searchPos != std::string::npos && searchPos < input.size() - 1)
         {
             searchPos = input.find_first_of("\"'", searchPos + 1);
-            if(searchPos == std::string::npos)
+            if (searchPos == std::string::npos)
             {
                 break;
             }
 
             const char foundToken = input[searchPos];
 
-            if(input[searchPos] == '\"' || input[searchPos] == '\'')
+            if (input[searchPos] == '\"' || input[searchPos] == '\'')
             {
-                if(token == 0 && input[searchPos-1] != '\\')
+                if (token == 0 && input[searchPos - 1] != '\\')
                 {
                     return false;
                 }
                 //if(foundToken == token)
                 //{
 
-                    /*if(foundToken == token && searchPos == input.size() - 1 && input[searchPos-1] != '\\')
+                /*if(foundToken == token && searchPos == input.size() - 1 && input[searchPos-1] != '\\')
                     {
                         return true;
                         if(searchPos == input.size() - 1)
@@ -2688,14 +2615,14 @@ namespace Yaml
                         return false;
                     }
                     else */
-                    if(foundToken == token && input[searchPos-1] != '\\')
+                if (foundToken == token && input[searchPos - 1] != '\\')
+                {
+                    if (searchPos == input.size() - 1)
                     {
-                        if(searchPos == input.size() - 1)
-                        {
-                            return true;
-                        }
-                        return false;
+                        return true;
                     }
+                    return false;
+                }
                 //}
             }
         }
@@ -2703,25 +2630,25 @@ namespace Yaml
         return token == 0;
     }
 
-    void CopyNode(const Node & from, Node & to)
+    void CopyNode(const Node &from, Node &to)
     {
         const Node::eType type = from.Type();
 
-        switch(type)
+        switch (type)
         {
         case Node::SequenceType:
-            for(auto it = from.Begin(); it != from.End(); it++)
+            for (auto it = from.Begin(); it != from.End(); it++)
             {
-                const Node & currentNode = (*it).second;
-                Node & newNode = to.PushBack();
+                const Node &currentNode = (*it).second;
+                Node &newNode = to.PushBack();
                 CopyNode(currentNode, newNode);
             }
             break;
         case Node::MapType:
-            for(auto it = from.Begin(); it != from.End(); it++)
+            for (auto it = from.Begin(); it != from.End(); it++)
             {
-                const Node & currentNode = (*it).second;
-                Node & newNode = to[(*it).first];
+                const Node &currentNode = (*it).second;
+                Node &newNode = to[(*it).first];
                 CopyNode(currentNode, newNode);
             }
             break;
@@ -2733,19 +2660,19 @@ namespace Yaml
         }
     }
 
-    bool ShouldBeCited(const std::string & key)
+    bool ShouldBeCited(const std::string &key)
     {
         return key.find_first_of("\":{}[],&*#?|-<>=!%@") != std::string::npos;
     }
 
-    void AddEscapeTokens(std::string & input, const std::string & tokens)
+    void AddEscapeTokens(std::string &input, const std::string &tokens)
     {
-        for(auto it = tokens.begin(); it != tokens.end(); it++)
+        for (auto it = tokens.begin(); it != tokens.end(); it++)
         {
             const char token = *it;
             const std::string replace = std::string("\\") + std::string(1, token);
             size_t found = input.find_first_of(token);
-            while(found != std::string::npos)
+            while (found != std::string::npos)
             {
                 input.replace(found, 1, replace);
                 found = input.find_first_of(token, found + 2);
@@ -2753,12 +2680,12 @@ namespace Yaml
         }
     }
 
-    void RemoveAllEscapeTokens(std::string & input)
+    void RemoveAllEscapeTokens(std::string &input)
     {
         size_t found = input.find_first_of("\\");
-        while(found != std::string::npos)
+        while (found != std::string::npos)
         {
-            if(found + 1 == input.size())
+            if (found + 1 == input.size())
             {
                 return;
             }
@@ -2768,6 +2695,5 @@ namespace Yaml
             found = input.find_first_of("\\", found + 1);
         }
     }
-
 
 }
