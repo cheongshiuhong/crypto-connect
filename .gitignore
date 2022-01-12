@@ -1,0 +1,16 @@
+# Secret files
+*.env
+config.yaml
+
+# Compiled files
+build/
+*.o
+*.so
+*.a
+
+# Misc
+/*.cpp
+
+# Python stuff
+venv/
+__pycache__/
